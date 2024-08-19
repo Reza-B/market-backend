@@ -7,6 +7,14 @@ export const phoneSchema = Joi.object({
 		.required(), // شماره تلفن باید 10 تا 15 رقم باشد
 });
 
+// اعتبارسنجی شماره تلفن
+export const codeSchema = Joi.object({
+	phone: Joi.string()
+		.pattern(/^[0-9]{10,15}$/)
+		.required(), // شماره تلفن باید 10 تا 15 رقم باشد
+	verificationCode: Joi.string().length(6).required(),
+});
+
 // اعتبارسنجی اطلاعات ثبت‌نام
 export const registerSchema = Joi.object({
 	phone: Joi.string()
@@ -15,6 +23,7 @@ export const registerSchema = Joi.object({
 	firstName: Joi.string().required(),
 	lastName: Joi.string().required(),
 	verificationCode: Joi.string().length(6).required(), // کد تأیید باید 6 رقم باشد
+	password: Joi.string().min(8).required(),
 });
 
 // اعتبارسنجی اطلاعات ورود
@@ -22,7 +31,7 @@ export const loginSchema = Joi.object({
 	phone: Joi.string()
 		.pattern(/^[0-9]{10,15}$/)
 		.required(), // شماره تلفن باید 10 تا 15 رقم باشد
-	password: Joi.string().min(6).required(),
+	password: Joi.string().min(8).required(),
 });
 
 // اعتبارسنجی درخواست ارسال دوباره کد تأیید
@@ -35,7 +44,7 @@ export const resendVerificationCodeSchema = Joi.object({
 // اعتبارسنجی اطلاعات ویرایش کاربر
 export const updateUserSchema = Joi.object({
 	email: Joi.string().email().optional(),
-	password: Joi.string().min(6).optional(),
+	password: Joi.string().min(8).optional(),
 	firstName: Joi.string().optional(),
 	lastName: Joi.string().optional(),
 	profilePicture: Joi.string().uri().optional(),

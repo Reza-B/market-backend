@@ -48,6 +48,7 @@ app.use(morgan("dev"));
 setupSwagger(app);
 
 // Routes
+app.use("/api/users", userRoutes);
 app.use("/api", cartRoutes);
 app.use("/api", discountRoutes);
 app.use("/api", inventoryRoutes);
@@ -55,7 +56,6 @@ app.use("/api", orderRoutes);
 app.use("/api", paymentRoutes);
 app.use("/api", productRoutes);
 app.use("/api", shippingRoutes);
-app.use("/api", userRoutes);
 
 app.use(errorMiddleware);
 

@@ -6,6 +6,7 @@ import {
 	loginSchema,
 	resendVerificationCodeSchema,
 	updateUserSchema,
+	codeSchema,
 } from "../validators/userValidator";
 import bcrypt from "bcryptjs";
 import { sendVerificationCode } from "../services/notificationService";
@@ -95,7 +96,7 @@ export const completeRegistration = async (
 	next: NextFunction,
 ) => {
 	try {
-		const { phone, verificationCode, firstName, lastName } = req.body;
+		const { phone, verificationCode, firstName, lastName, password } = req.body;
 
 		// اعتبارسنجی ورودی
 		const { error } = registerSchema.validate(req.body);
@@ -119,14 +120,19 @@ export const completeRegistration = async (
 
 		user.firstName = firstName;
 		user.lastName = lastName;
+		user.password = password;
 		user.isPhoneVerified = true;
 		user.verificationCode = undefined;
 
 		await user.save();
 
-		res
-			.status(200)
-			.json({ status: "success", message: "Registration complete", user });
+		const token = generateToken(user);
+
+		res.status(200).json({
+			status: "success",
+			message: "Registration complete",
+			token,
+		});
 	} catch (error) {
 		next(error);
 	}
@@ -211,6 +217,50 @@ export const requestVerificationCodeForLogin = async (
 	}
 };
 
+// تکمیل ورود با کد تائید
+export const loginWithCode = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { phone, verificationCode } = req.body;
+
+		// اعتبارسنجی ورودی
+		const { error } = codeSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const user = await User.findOne({ phone });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+		}
+
+		if (!user.isPhoneVerified) {
+			return res
+				.status(400)
+				.json({ status: "error", message: "Phone number not verified" });
+		}
+
+		if (user.verificationCode !== verificationCode) {
+			return res
+				.status(400)
+				.json({ status: "error", message: "Invalid verification code" });
+		}
+
+		const token = generateToken(user); // تولید توکن JWT
+		res
+			.status(200)
+			.json({ status: "success", message: "Login successful", token });
+	} catch (error) {
+		next(error);
+	}
+};
+
 // دریافت اطلاعات کاربر
 export const getUserInfo = async (
 	req: Request,
@@ -225,18 +275,30 @@ export const getUserInfo = async (
 				.json({ status: "error", message: "No token provided" });
 
 		const decoded = verifyToken(token);
+		console.log(decoded);
 		if (!decoded)
 			return res
 				.status(401)
 				.json({ status: "error", message: "Invalid token" });
 
-		const user = await User.findById(decoded.id);
+		const user = await User.findById(decoded.userId);
 		if (!user)
 			return res
 				.status(404)
 				.json({ status: "error", message: "User not found" });
 
-		res.status(200).json({ status: "success", user });
+		res.status(200).json({
+			status: "success",
+			user: {
+				id: user._id,
+				phone: user.phone,
+				firstName: user.firstName,
+				lastname: user.lastName,
+				email: user.email,
+				profilePicture: user.profilePicture,
+				gender: user.gender,
+			},
+		});
 	} catch (error) {
 		next(error);
 	}
@@ -289,23 +351,26 @@ export const updateUser = async (
 				.status(404)
 				.json({ status: "error", message: "User not found" });
 
-		// اعمال تغییرات
 		if (updates.password) {
-			updates.password = await bcrypt.hash(updates.password, 10);
+			user.password = updates.password;
 		}
 
-		const updatedUser = await User.findByIdAndUpdate(id, updates, {
-			new: true,
-		});
-		if (!updatedUser)
-			return res
-				.status(404)
-				.json({ status: "error", message: "Error updating user" });
+		Object.assign(user, updates);
+
+		await user.save();
 
 		res.status(200).json({
 			status: "success",
 			message: "User updated successfully",
-			user: updatedUser,
+			user: {
+				id: user._id,
+				phone: user.phone,
+				firstName: user.firstName,
+				lastname: user.lastName,
+				email: user.email,
+				profilePicture: user.profilePicture,
+				gender: user.gender,
+			},
 		});
 	} catch (error) {
 		next(error);

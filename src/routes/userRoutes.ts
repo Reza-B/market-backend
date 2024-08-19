@@ -8,6 +8,7 @@ import {
 	getUserInfo,
 	deleteUser,
 	updateUser,
+	loginWithCode,
 } from "../controllers/userController";
 
 const router = express.Router();
@@ -108,6 +109,35 @@ router.post("/resend-code", resendVerificationCode);
  *         description: Server error
  */
 router.post("/complete-registration", completeRegistration);
+
+/**
+ * @swagger
+ * /users/complete-login:
+ *   post:
+ *     summary: Complete login with verification code
+ *     tags: [User]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 description: User phone number
+ *               verificationCode:
+ *                 type: string
+ *                 description: Verification code sent to user
+ *     responses:
+ *       201:
+ *         description: User logined successfully
+ *       400:
+ *         description: Invalid verification code or phone number
+ *       500:
+ *         description: Server error
+ */
+router.post("/complete-login", loginWithCode);
 
 /**
  * @swagger
