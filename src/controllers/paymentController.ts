@@ -1,53 +1,118 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Payment from "../models/paymentModel";
+import {
+	createPaymentSchema,
+	updatePaymentSchema,
+} from "../validators/paymentValidator";
 
-export const createPayment = async (req: Request, res: Response) => {
+// ایجاد یک پرداخت جدید
+export const createPayment = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const { error } = createPaymentSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
 		const payment = new Payment(req.body);
 		await payment.save();
-		res.status(201).json(payment);
+
+		res.status(201).json({ status: "success", data: payment });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create payment" });
+		next(error);
 	}
 };
 
-export const getPayments = async (req: Request, res: Response) => {
+// دریافت تمام پرداخت‌ها
+export const getAllPayments = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
 		const payments = await Payment.find().populate("order");
-		res.status(200).json(payments);
+		res.status(200).json({ status: "success", data: payments });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch payments" });
+		next(error);
 	}
 };
 
-export const getPaymentById = async (req: Request, res: Response) => {
+// دریافت پرداخت با شناسه خاص
+export const getPaymentById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const payment = await Payment.findById(req.params.id).populate("order");
-		if (!payment) return res.status(404).json({ error: "Payment not found" });
-		res.status(200).json(payment);
+		const { id } = req.params;
+		const payment = await Payment.findById(id).populate("order");
+
+		if (!payment) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Payment not found" });
+		}
+
+		res.status(200).json({ status: "success", data: payment });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch payment" });
+		next(error);
 	}
 };
 
-export const updatePayment = async (req: Request, res: Response) => {
+// به‌روزرسانی پرداخت
+export const updatePayment = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, {
+		const { id } = req.params;
+		const { error } = updatePaymentSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const payment = await Payment.findByIdAndUpdate(id, req.body, {
 			new: true,
 		});
-		if (!payment) return res.status(404).json({ error: "Payment not found" });
-		res.status(200).json(payment);
+
+		if (!payment) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Payment not found" });
+		}
+
+		res.status(200).json({ status: "success", data: payment });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to update payment" });
+		next(error);
 	}
 };
 
-export const deletePayment = async (req: Request, res: Response) => {
+// حذف پرداخت
+export const deletePayment = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const payment = await Payment.findByIdAndDelete(req.params.id);
-		if (!payment) return res.status(404).json({ error: "Payment not found" });
-		res.status(200).json({ message: "Payment deleted" });
+		const { id } = req.params;
+		const payment = await Payment.findByIdAndDelete(id);
+
+		if (!payment) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Payment not found" });
+		}
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Payment deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete payment" });
+		next(error);
 	}
 };

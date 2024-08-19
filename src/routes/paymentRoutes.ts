@@ -1,19 +1,19 @@
-import express from "express";
+import { Router } from "express";
 import {
 	createPayment,
-	getPayments,
+	getAllPayments,
 	getPaymentById,
 	updatePayment,
 	deletePayment,
 } from "../controllers/paymentController";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
  * tags:
- *   name: Payment
- *   description: Payment management
+ *   name: Payments
+ *   description: API for managing payments
  */
 
 /**
@@ -21,7 +21,7 @@ const router = express.Router();
  * /payments:
  *   post:
  *     summary: Create a new payment
- *     tags: [Payment]
+ *     tags: [Payments]
  *     requestBody:
  *       required: true
  *       content:
@@ -37,64 +37,63 @@ const router = express.Router();
  *                 type: string
  *               status:
  *                 type: string
+ *               paymentDate:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       201:
- *         description: Payment created successfully
- *       500:
- *         description: Server error
+ *         description: The created payment
+ *       400:
+ *         description: Bad request
  */
-router.post("/payments", createPayment);
+router.post("/", createPayment);
 
 /**
  * @swagger
  * /payments:
  *   get:
  *     summary: Get all payments
- *     tags: [Payment]
+ *     tags: [Payments]
  *     responses:
  *       200:
- *         description: List of all payments
- *       500:
- *         description: Server error
+ *         description: A list of payments
  */
-router.get("/payments", getPayments);
+router.get("/", getAllPayments);
 
 /**
  * @swagger
  * /payments/{id}:
  *   get:
  *     summary: Get a payment by ID
- *     tags: [Payment]
+ *     tags: [Payments]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Payment ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The payment ID
  *     responses:
  *       200:
- *         description: Payment details
+ *         description: The payment data
  *       404:
  *         description: Payment not found
- *       500:
- *         description: Server error
  */
-router.get("/payments/:id", getPaymentById);
+router.get("/:id", getPaymentById);
 
 /**
  * @swagger
  * /payments/{id}:
  *   put:
- *     summary: Update a payment by ID
- *     tags: [Payment]
+ *     summary: Update a payment
+ *     tags: [Payments]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Payment ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The payment ID
  *     requestBody:
  *       required: true
  *       content:
@@ -110,37 +109,38 @@ router.get("/payments/:id", getPaymentById);
  *                 type: string
  *               status:
  *                 type: string
+ *               paymentDate:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       200:
- *         description: Payment updated successfully
+ *         description: The updated payment
+ *       400:
+ *         description: Bad request
  *       404:
  *         description: Payment not found
- *       500:
- *         description: Server error
  */
-router.put("/payments/:id", updatePayment);
+router.put("/:id", updatePayment);
 
 /**
  * @swagger
  * /payments/{id}:
  *   delete:
- *     summary: Delete a payment by ID
- *     tags: [Payment]
+ *     summary: Delete a payment
+ *     tags: [Payments]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Payment ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The payment ID
  *     responses:
  *       200:
- *         description: Payment deleted successfully
+ *         description: Confirmation of payment deletion
  *       404:
  *         description: Payment not found
- *       500:
- *         description: Server error
  */
-router.delete("/payments/:id", deletePayment);
+router.delete("/:id", deletePayment);
 
 export default router;
