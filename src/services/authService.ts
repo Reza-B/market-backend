@@ -5,7 +5,7 @@ import { IUser } from "../models/interfaces/IUser"; // مسیر مدل کارب�
 export function generateToken(user: IUser): string {
 	const payload = {
 		userId: user._id,
-		username: user.phone,
+		phone: user.phone,
 	};
 
 	return jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1h" }); // توکن به مدت یک ساعت معتبر است

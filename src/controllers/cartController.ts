@@ -1,83 +1,147 @@
-import { Request, Response } from "express";
+// src/controllers/cartController.ts
+import { Request, Response, NextFunction } from "express";
 import Cart from "../models/cartModel";
+import Product from "../models/productModel"; // فرض بر اینکه این مدل موجود است
 
-// افزودن محصول به سبد خرید
-export const addToCart = async (req: Request, res: Response) => {
+// ایجاد یا بروزرسانی سبد خرید
+export const addToCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const { userId, productId, quantity } = req.body;
+		const userId = req.user?._id; // فرض بر اینکه از JWT استفاده می‌کنید و user.id در JWT ذخیره شده
+		const { productId, quantity } = req.body;
 
-		// بررسی وجود محصول در سبد خرید کاربر
+		// بررسی وجود محصول
+		const product = await Product.findById(productId);
+		if (!product) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Product not found" });
+		}
+
+		// بررسی وجود سبد خرید برای کاربر
 		let cart = await Cart.findOne({ user: userId });
+
 		if (cart) {
-			// بررسی وجود محصول در سبد خرید
+			// بروزرسانی تعداد محصول اگر محصول در سبد خرید موجود است
 			const itemIndex = cart.items.findIndex(
 				(item) => item.product.toString() === productId,
 			);
+
 			if (itemIndex > -1) {
-				// اگر محصول در سبد خرید وجود دارد، فقط تعداد را به‌روزرسانی کن
 				cart.items[itemIndex].quantity += quantity;
 			} else {
-				// اگر محصول در سبد خرید وجود ندارد، آن را اضافه کن
 				cart.items.push({ product: productId, quantity });
 			}
 		} else {
-			// اگر سبد خرید وجود ندارد، یک سبد خرید جدید برای کاربر ایجاد کن
+			// ایجاد سبد خرید جدید
 			cart = new Cart({
 				user: userId,
 				items: [{ product: productId, quantity }],
+				totalPrice: product.price * quantity,
 			});
 		}
 
+		// بروزرسانی قیمت کل
+		cart.totalPrice = cart.items.reduce(
+			(acc, item) => acc + item.quantity * product.price,
+			0,
+		);
+
 		await cart.save();
-		res.status(200).json(cart);
+
+		res.status(200).json({ status: "success", cart });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to add item to cart" });
+		next(error);
 	}
 };
 
 // دریافت سبد خرید کاربر
-export const getCart = async (req: Request, res: Response) => {
+export const getCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const cart = await Cart.findOne({ user: req.params.userId }).populate(
-			"items.product",
-		);
-		if (!cart) return res.status(404).json({ error: "Cart not found" });
-		res.status(200).json(cart);
+		const userId = req.user?._id; // فرض بر اینکه از JWT استفاده می‌کنید و user.id در JWT ذخیره شده
+
+		const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+		if (!cart) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Cart not found" });
+		}
+
+		res.status(200).json({ status: "success", cart });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch cart" });
+		next(error);
 	}
 };
 
-// حذف محصول از سبد خرید
-export const removeFromCart = async (req: Request, res: Response) => {
+// حذف یک محصول از سبد خرید
+export const removeFromCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const { userId, productId } = req.body;
+		const userId = req.user?._id;
+		const { productId } = req.params;
 
 		const cart = await Cart.findOne({ user: userId });
-		if (!cart) return res.status(404).json({ error: "Cart not found" });
+		if (!cart) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Cart not found" });
+		}
 
 		const itemIndex = cart.items.findIndex(
 			(item) => item.product.toString() === productId,
 		);
+
 		if (itemIndex > -1) {
 			cart.items.splice(itemIndex, 1);
+
+			// بروزرسانی قیمت کل
+			cart.totalPrice = cart.items.reduce(
+				(acc, item) => acc + item.quantity * item.product.price,
+				0,
+			);
+
 			await cart.save();
-			res.status(200).json(cart);
+			return res.status(200).json({ status: "success", cart });
 		} else {
-			res.status(404).json({ error: "Product not found in cart" });
+			return res
+				.status(404)
+				.json({ status: "error", message: "Product not found in cart" });
 		}
 	} catch (error) {
-		res.status(500).json({ error: "Failed to remove item from cart" });
+		next(error);
 	}
 };
 
-// حذف سبد خرید کاربر
-export const clearCart = async (req: Request, res: Response) => {
+// حذف کامل سبد خرید
+export const clearCart = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const cart = await Cart.findOneAndDelete({ user: req.params.userId });
-		if (!cart) return res.status(404).json({ error: "Cart not found" });
-		res.status(200).json({ message: "Cart cleared" });
+		const userId = req.user?._id;
+
+		const cart = await Cart.findOneAndDelete({ user: userId });
+
+		if (!cart) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Cart not found" });
+		}
+
+		res.status(200).json({ status: "success", message: "Cart cleared" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to clear cart" });
+		next(error);
 	}
 };

@@ -9,4 +9,7 @@ export interface ICartItem {
 export interface ICart extends Document {
 	user: string;
 	items: ICartItem[];
+	totalPrice: number;
+	createdAt: Date;
+	updatedAt: Date;
 }

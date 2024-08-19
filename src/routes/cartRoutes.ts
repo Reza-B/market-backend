@@ -1,4 +1,6 @@
-import express from "express";
+// src/routes/cartRoutes.ts
+import { Router } from "express";
+
 import {
 	addToCart,
 	getCart,
@@ -7,119 +9,148 @@ import {
 } from "../controllers/cartController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
- * tags:
- *   name: Cart
- *   description: Cart management
+ * /cart/add:
+ *   post:
+ *     summary: Add an item to the cart
+ *     description: Add a product to the user's cart. Requires authentication.
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: string
+ *                 description: The ID of the product to add to the cart
+ *               quantity:
+ *                 type: number
+ *                 description: Quantity of the product to add
+ *             required:
+ *               - productId
+ *               - quantity
+ *     responses:
+ *       200:
+ *         description: The updated cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 cart:
+ *                   $ref: '#/components/schemas/Cart'
+ *       400:
+ *         description: Bad Request
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Internal Server Error
  */
+router.post("/add", authMiddleware, addToCart);
 
 /**
  * @swagger
  * /cart:
- *   post:
- *     summary: Add an item to the cart
- *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               productId:
- *                 type: string
- *               quantity:
- *                 type: integer
- *     responses:
- *       201:
- *         description: Item added to the cart
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.post("/cart", authMiddleware, addToCart);
-
-/**
- * @swagger
- * /cart/{userId}:
  *   get:
- *     summary: Get the cart for a specific user
+ *     summary: Get the user's cart
+ *     description: Retrieve the current cart for the authenticated user.
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         description: User ID
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: Cart retrieved
- *       401:
- *         description: Unauthorized
+ *         description: The user's cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 cart:
+ *                   $ref: '#/components/schemas/Cart'
+ *       404:
+ *         description: Cart not found
  *       500:
- *         description: Server error
+ *         description: Internal Server Error
  */
-router.get("/cart/:userId", authMiddleware, getCart);
+router.get("/", authMiddleware, getCart);
 
 /**
  * @swagger
- * /cart/remove:
+ * /cart/remove/{productId}:
  *   delete:
  *     summary: Remove an item from the cart
- *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               productId:
- *                 type: string
- *     responses:
- *       200:
- *         description: Item removed from the cart
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.delete("/cart/remove", authMiddleware, removeFromCart);
-
-/**
- * @swagger
- * /cart/clear/{userId}:
- *   delete:
- *     summary: Clear the cart for a specific user
+ *     description: Remove a specific product from the user's cart. Requires authentication.
  *     tags: [Cart]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: userId
- *         required: true
- *         description: User ID
+ *         name: productId
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The ID of the product to remove from the cart
  *     responses:
  *       200:
- *         description: Cart cleared
- *       401:
- *         description: Unauthorized
+ *         description: The updated cart after removing the item
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 cart:
+ *                   $ref: '#/components/schemas/Cart'
+ *       404:
+ *         description: Cart or product not found
  *       500:
- *         description: Server error
+ *         description: Internal Server Error
  */
-router.delete("/cart/clear/:userId", authMiddleware, clearCart);
+router.delete("/remove/:productId", authMiddleware, removeFromCart);
+
+/**
+ * @swagger
+ * /cart/clear:
+ *   delete:
+ *     summary: Clear the user's cart
+ *     description: Remove all items from the user's cart. Requires authentication.
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Confirmation of cleared cart
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Cart cleared
+ *       404:
+ *         description: Cart not found
+ *       500:
+ *         description: Internal Server Error
+ */
+router.delete("/clear", authMiddleware, clearCart);
 
 export default router;
