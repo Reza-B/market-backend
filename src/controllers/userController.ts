@@ -1,53 +1,313 @@
-// src/controllers/userController.ts
-import { Request, Response } from "express";
-import User from "../models/User";
+import { Request, Response, NextFunction } from "express";
+import User from "../models/userModel";
+import {
+	phoneSchema,
+	registerSchema,
+	loginSchema,
+	resendVerificationCodeSchema,
+	updateUserSchema,
+} from "../validators/userValidator";
+import bcrypt from "bcryptjs";
+import { sendVerificationCode } from "../services/notificationService";
+import { generateToken, verifyToken } from "../services/authService";
 
-export const getUsers = async (req: Request, res: Response) => {
+// ورود کاربر با شماره تلفن
+export const handlePhoneInput = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const users = await User.find().populate("basket");
-		res.json(users);
-	} catch (err: any) {
-		res.status(500).json({ message: err.message });
+		const { phone } = req.body;
+
+		// اعتبارسنجی شماره تلفن
+		const { error } = phoneSchema.validate({ phone });
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		// جستجوی کاربر با شماره تلفن
+		const user = await User.findOne({ phone });
+
+		if (user) {
+			if (user.isPhoneVerified) {
+				return res
+					.status(400)
+					.json({ status: "error", message: "Phone number already in use" });
+			} else {
+				// حذف کاربر قبلی و ادامه ثبت‌نام
+				await User.deleteOne({ phone });
+				await sendVerificationCode(phone);
+				return res
+					.status(200)
+					.json({ status: "success", message: "Proceed with registration" });
+			}
+		}
+
+		// ایجاد کاربر جدید و ارسال کد تأیید
+		await sendVerificationCode(phone);
+		res
+			.status(200)
+			.json({ status: "success", message: "Verification code sent" });
+	} catch (error) {
+		next(error);
 	}
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+// ارسال دوباره کد تأیید
+export const resendVerificationCode = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const user = await User.findById(req.params.id).populate("basket");
-		if (!user) return res.status(404).json({ message: "User not found" });
-		res.json(user);
-	} catch (err: any) {
-		res.status(500).json({ message: err.message });
+		const { phone } = req.body;
+
+		// اعتبارسنجی شماره تلفن
+		const { error } = resendVerificationCodeSchema.validate({ phone });
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const user = await User.findOne({ phone });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+		}
+
+		await sendVerificationCode(phone);
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Verification code resent" });
+	} catch (error) {
+		next(error);
 	}
 };
 
-export const createUser = async (req: Request, res: Response) => {
-	const {
-		firstName,
-		lastName,
-		phone,
-		address,
-		email,
-		basket,
-		favorite,
-		totalPrice,
-	} = req.body;
-
-	const newUser = new User({
-		firstName,
-		lastName,
-		phone,
-		address,
-		email,
-		basket,
-		favorite,
-		totalPrice,
-	});
-
+// تکمیل ثبت‌نام
+export const completeRegistration = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const savedUser = await newUser.save();
-		res.status(201).json(savedUser);
-	} catch (err: any) {
-		res.status(500).json({ message: err.message });
+		const { phone, verificationCode, firstName, lastName } = req.body;
+
+		// اعتبارسنجی ورودی
+		const { error } = registerSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const user = await User.findOne({ phone });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+		}
+
+		if (user.verificationCode !== verificationCode) {
+			return res
+				.status(400)
+				.json({ status: "error", message: "Invalid verification code" });
+		}
+
+		user.firstName = firstName;
+		user.lastName = lastName;
+		user.isPhoneVerified = true;
+		user.verificationCode = undefined;
+
+		await user.save();
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Registration complete", user });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// تکمیل ورود با رمز عبور
+export const loginWithPassword = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { phone, password } = req.body;
+
+		// اعتبارسنجی ورودی
+		const { error } = loginSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const user = await User.findOne({ phone });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+		}
+
+		if (!user.isPhoneVerified) {
+			return res
+				.status(400)
+				.json({ status: "error", message: "Phone number not verified" });
+		}
+
+		const isMatch = await user.comparePassword(password);
+		if (!isMatch) {
+			return res
+				.status(401)
+				.json({ status: "error", message: "Invalid password" });
+		}
+
+		const token = generateToken(user); // تولید توکن JWT
+		res
+			.status(200)
+			.json({ status: "success", message: "Login successful", token });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// درخواست کد تأیید برای ورود
+export const requestVerificationCodeForLogin = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { phone } = req.body;
+
+		// اعتبارسنجی شماره تلفن
+		const { error } = resendVerificationCodeSchema.validate({ phone });
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const user = await User.findOne({ phone });
+		if (!user || !user.isPhoneVerified) {
+			return res.status(404).json({
+				status: "error",
+				message: "User not found or phone number not verified",
+			});
+		}
+
+		await sendVerificationCode(phone);
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Verification code sent" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت اطلاعات کاربر
+export const getUserInfo = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const token = req.headers.authorization?.split(" ")[1];
+		if (!token)
+			return res
+				.status(401)
+				.json({ status: "error", message: "No token provided" });
+
+		const decoded = verifyToken(token);
+		if (!decoded)
+			return res
+				.status(401)
+				.json({ status: "error", message: "Invalid token" });
+
+		const user = await User.findById(decoded.id);
+		if (!user)
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+
+		res.status(200).json({ status: "success", user });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// حذف کاربر
+export const deleteUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { id } = req.params;
+
+		const user = await User.findByIdAndDelete(id);
+		if (!user)
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+
+		res
+			.status(200)
+			.json({ status: "success", message: "User deleted successfully" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// ویرایش اطلاعات کاربر
+export const updateUser = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { id } = req.params;
+		const updates = req.body;
+
+		// اعتبارسنجی ورودی
+		const { error } = updateUserSchema.validate(updates);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		// بررسی وجود کاربر
+		const user = await User.findById(id);
+		if (!user)
+			return res
+				.status(404)
+				.json({ status: "error", message: "User not found" });
+
+		// اعمال تغییرات
+		if (updates.password) {
+			updates.password = await bcrypt.hash(updates.password, 10);
+		}
+
+		const updatedUser = await User.findByIdAndUpdate(id, updates, {
+			new: true,
+		});
+		if (!updatedUser)
+			return res
+				.status(404)
+				.json({ status: "error", message: "Error updating user" });
+
+		res.status(200).json({
+			status: "success",
+			message: "User updated successfully",
+			user: updatedUser,
+		});
+	} catch (error) {
+		next(error);
 	}
 };

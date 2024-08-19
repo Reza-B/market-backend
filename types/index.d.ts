@@ -2,7 +2,7 @@
 
 import { Document } from "mongoose";
 import { Request } from "express";
-import { IUser } from "../models/interfaces/IUser";
+import { IUser } from "../models/userModel";
 
 declare global {
 	namespace Express {
