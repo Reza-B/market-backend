@@ -1,10 +1,11 @@
 // src/app.ts
 import express, { Application } from "express";
-import productRoutes from "./routes/productRoutes";
-import userRoutes from "./routes/userRoutes";
 import { setupSwagger } from "./swagger";
 import morgan from "morgan";
-import pingRoutes from "./routes/pingRoutes";
+
+import productRoutes from "./routes/productRoutes";
+import userRoutes from "./routes/userRoutes";
+import authRoutes from "./routes/authRoutes";
 
 const app: Application = express();
 
@@ -16,8 +17,8 @@ app.use(morgan("dev"));
 setupSwagger(app);
 
 // Routes
+app.use("/api/users", authRoutes);
 app.use("/api", productRoutes);
 app.use("/api", userRoutes);
-app.use("/api", pingRoutes);
 
 export default app;
