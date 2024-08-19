@@ -1,57 +1,121 @@
-import { Request, Response } from "express";
+// src/controllers/orderController.ts
+import { Request, Response, NextFunction } from "express";
 import Order from "../models/orderModel";
+import {
+	createOrderSchema,
+	updateOrderSchema,
+} from "../validators/orderValidator";
 
-export const createOrder = async (req: Request, res: Response) => {
+// ایجاد یک سفارش جدید
+export const createOrder = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const { error } = createOrderSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
 		const order = new Order(req.body);
 		await order.save();
-		res.status(201).json(order);
+
+		res.status(201).json({ status: "success", data: order });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create order" });
+		next(error);
 	}
 };
 
-export const getOrders = async (req: Request, res: Response) => {
+// دریافت تمام سفارشات
+export const getAllOrders = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
 		const orders = await Order.find().populate(
-			"user products.product shipping",
+			"user cart payment shipping products.product",
 		);
-		res.status(200).json(orders);
+		res.status(200).json({ status: "success", data: orders });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch orders" });
+		next(error);
 	}
 };
 
-export const getOrderById = async (req: Request, res: Response) => {
+// دریافت سفارش با شناسه خاص
+export const getOrderById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const order = await Order.findById(req.params.id).populate(
-			"user products.product shipping",
+		const { id } = req.params;
+		const order = await Order.findById(id).populate(
+			"user cart payment shipping products.product",
 		);
-		if (!order) return res.status(404).json({ error: "Order not found" });
-		res.status(200).json(order);
+
+		if (!order) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Order not found" });
+		}
+
+		res.status(200).json({ status: "success", data: order });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch order" });
+		next(error);
 	}
 };
 
-export const updateOrder = async (req: Request, res: Response) => {
+// به‌روزرسانی سفارش
+export const updateOrder = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const order = await Order.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-		});
-		if (!order) return res.status(404).json({ error: "Order not found" });
-		res.status(200).json(order);
+		const { id } = req.params;
+		const { error } = updateOrderSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const order = await Order.findByIdAndUpdate(id, req.body, { new: true });
+
+		if (!order) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Order not found" });
+		}
+
+		res.status(200).json({ status: "success", data: order });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to update order" });
+		next(error);
 	}
 };
 
-export const deleteOrder = async (req: Request, res: Response) => {
+// حذف سفارش
+export const deleteOrder = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const order = await Order.findByIdAndDelete(req.params.id);
-		if (!order) return res.status(404).json({ error: "Order not found" });
-		res.status(200).json({ message: "Order deleted" });
+		const { id } = req.params;
+		const order = await Order.findByIdAndDelete(id);
+
+		if (!order) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Order not found" });
+		}
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Order deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete order" });
+		next(error);
 	}
 };

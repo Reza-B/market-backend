@@ -1,19 +1,19 @@
-import express from "express";
+import { Router } from "express";
 import {
 	createOrder,
-	getOrders,
+	getAllOrders,
 	getOrderById,
 	updateOrder,
 	deleteOrder,
 } from "../controllers/orderController";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
  * tags:
- *   name: Order
- *   description: Order management
+ *   name: Orders
+ *   description: API for managing orders
  */
 
 /**
@@ -21,7 +21,7 @@ const router = express.Router();
  * /orders:
  *   post:
  *     summary: Create a new order
- *     tags: [Order]
+ *     tags: [Orders]
  *     requestBody:
  *       required: true
  *       content:
@@ -31,6 +31,16 @@ const router = express.Router();
  *             properties:
  *               user:
  *                 type: string
+ *               cart:
+ *                 type: string
+ *               payment:
+ *                 type: string
+ *               shipping:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
  *               products:
  *                 type: array
  *                 items:
@@ -39,67 +49,61 @@ const router = express.Router();
  *                     product:
  *                       type: string
  *                     quantity:
- *                       type: integer
- *               totalAmount:
- *                 type: number
+ *                       type: number
  *     responses:
  *       201:
- *         description: Order created successfully
- *       500:
- *         description: Server error
+ *         description: The created order
+ *       400:
+ *         description: Bad request
  */
-router.post("/orders", createOrder);
+router.post("/", createOrder);
 
 /**
  * @swagger
  * /orders:
  *   get:
  *     summary: Get all orders
- *     tags: [Order]
+ *     tags: [Orders]
  *     responses:
  *       200:
- *         description: List of all orders
- *       500:
- *         description: Server error
+ *         description: A list of orders
  */
-router.get("/orders", getOrders);
+router.get("/", getAllOrders);
 
 /**
  * @swagger
  * /orders/{id}:
  *   get:
  *     summary: Get an order by ID
- *     tags: [Order]
+ *     tags: [Orders]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Order ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The order ID
  *     responses:
  *       200:
- *         description: Order details
+ *         description: The order data
  *       404:
  *         description: Order not found
- *       500:
- *         description: Server error
  */
-router.get("/orders/:id", getOrderById);
+router.get("/:id", getOrderById);
 
 /**
  * @swagger
  * /orders/{id}:
  *   put:
- *     summary: Update an order by ID
- *     tags: [Order]
+ *     summary: Update an order
+ *     tags: [Orders]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Order ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The order ID
  *     requestBody:
  *       required: true
  *       content:
@@ -109,6 +113,16 @@ router.get("/orders/:id", getOrderById);
  *             properties:
  *               user:
  *                 type: string
+ *               cart:
+ *                 type: string
+ *               payment:
+ *                 type: string
+ *               shipping:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
  *               products:
  *                 type: array
  *                 items:
@@ -117,40 +131,36 @@ router.get("/orders/:id", getOrderById);
  *                     product:
  *                       type: string
  *                     quantity:
- *                       type: integer
- *               totalAmount:
- *                 type: number
+ *                       type: number
  *     responses:
  *       200:
- *         description: Order updated successfully
+ *         description: The updated order
+ *       400:
+ *         description: Bad request
  *       404:
  *         description: Order not found
- *       500:
- *         description: Server error
  */
-router.put("/orders/:id", updateOrder);
+router.put("/:id", updateOrder);
 
 /**
  * @swagger
  * /orders/{id}:
  *   delete:
- *     summary: Delete an order by ID
- *     tags: [Order]
+ *     summary: Delete an order
+ *     tags: [Orders]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Order ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The order ID
  *     responses:
  *       200:
- *         description: Order deleted successfully
+ *         description: Confirmation of order deletion
  *       404:
  *         description: Order not found
- *       500:
- *         description: Server error
  */
-router.delete("/orders/:id", deleteOrder);
+router.delete("/:id", deleteOrder);
 
 export default router;
