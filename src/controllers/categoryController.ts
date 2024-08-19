@@ -1,55 +1,147 @@
-import { Request, Response } from "express";
+// src/controllers/categoryController.ts
+import { Request, Response, NextFunction } from "express";
 import Category from "../models/categoryModel";
+import {
+	createCategorySchema,
+	updateCategorySchema,
+} from "../validators/categoryValidator";
 
-export const createCategory = async (req: Request, res: Response) => {
+// ایجاد دسته‌بندی جدید
+export const createCategory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const category = new Category(req.body);
+		const { error } = createCategorySchema.validate(req.body);
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+		}
+
+		const { name, slug, products } = req.body;
+
+		const category = new Category({ name, slug, products });
 		await category.save();
-		res.status(201).json(category);
+
+		res.status(201).json({ status: "success", data: category });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create category" });
+		next(error);
 	}
 };
 
-export const getCategories = async (req: Request, res: Response) => {
+// دریافت تمام دسته‌بندی‌ها
+export const getAllCategories = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const categories = await Category.find();
-		res.status(200).json(categories);
+		const categories = await Category.find().populate("products");
+		res.status(200).json({ status: "success", data: categories });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch categories" });
+		next(error);
 	}
 };
 
-export const getCategoryById = async (req: Request, res: Response) => {
+// دریافت دسته‌بندی بر اساس شناسه
+export const getCategoryById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const category = await Category.findById(req.params.id).populate(
-			"products",
-		);
-		if (!category) return res.status(404).json({ error: "Category not found" });
-		res.status(200).json(category);
+		const { id } = req.params;
+		const category = await Category.findById(id).populate("products");
+
+		if (!category) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Category not found" });
+		}
+
+		res.status(200).json({ status: "success", data: category });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch category" });
+		next(error);
 	}
 };
 
-export const updateCategory = async (req: Request, res: Response) => {
+// دریافت دسته‌بندی بر اساس اسلاگ
+export const getCategoryBySlug = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
+		const { slug } = req.params;
+		const category = await Category.findOne({ slug }).populate("products");
+
+		if (!category) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Category not found" });
+		}
+
+		res.status(200).json({ status: "success", data: category });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// ویرایش دسته‌بندی
+export const updateCategory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { error } = updateCategorySchema.validate(req.body);
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+		}
+
+		const { id } = req.params;
+		const updates = req.body;
+
+		const updatedCategory = await Category.findByIdAndUpdate(id, updates, {
 			new: true,
 		});
-		if (!category) return res.status(404).json({ error: "Category not found" });
-		res.status(200).json(category);
+
+		if (!updatedCategory) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Category not found" });
+		}
+
+		res.status(200).json({ status: "success", data: updatedCategory });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to update category" });
+		next(error);
 	}
 };
 
-export const deleteCategory = async (req: Request, res: Response) => {
+// حذف دسته‌بندی
+export const deleteCategory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const category = await Category.findByIdAndDelete(req.params.id);
-		if (!category) return res.status(404).json({ error: "Category not found" });
-		res.status(200).json({ message: "Category deleted" });
+		const { id } = req.params;
+		const category = await Category.findByIdAndDelete(id);
+
+		if (!category) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Category not found" });
+		}
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Category deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete category" });
+		next(error);
 	}
 };

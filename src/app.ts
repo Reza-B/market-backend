@@ -36,6 +36,7 @@ import paymentRoutes from "./routes/paymentRoutes";
 import productRoutes from "./routes/productRoutes";
 import shippingRoutes from "./routes/shippingRoutes";
 import userRoutes from "./routes/userRoutes";
+import categoryRoutes from "./routes/categoryRoutes";
 import errorMiddleware from "./middlewares/errorMiddleware";
 
 const app: Application = express();
@@ -50,6 +51,7 @@ setupSwagger(app);
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api", discountRoutes);
 app.use("/api", inventoryRoutes);
 app.use("/api", orderRoutes);

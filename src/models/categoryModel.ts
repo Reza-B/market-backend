@@ -3,8 +3,8 @@ import mongoose, { Schema } from "mongoose";
 import { ICategory } from "./interfaces/ICategory";
 
 const CategorySchema: Schema = new Schema({
+	slug: { type: String, required: true },
 	name: { type: String, required: true },
-	description: { type: String },
 	products: [{ type: Schema.Types.ObjectId, ref: "Product" }],
 });
 

@@ -3,6 +3,6 @@ import { IProduct } from "./IProduct";
 
 export interface ICategory extends Document {
 	name: string;
-	description?: string;
+	slug?: string;
 	products?: IProduct[];
 }

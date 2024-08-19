@@ -1,7 +1,20 @@
+// src/validators/categoryValidator.ts
 import Joi from "joi";
 
-// اعتبارسنجی درخواست ایجاد یا به‌روزرسانی دسته‌بندی
-export const categorySchema = Joi.object({
-	name: Joi.string().min(2).max(50).required(),
-	description: Joi.string().optional(),
+export const createCategorySchema = Joi.object({
+	name: Joi.string().required().messages({
+		"string.empty": "Category name is required",
+		"any.required": "Category name is required",
+	}),
+	slug: Joi.string().required().messages({
+		"string.empty": "Category slug is required",
+		"any.required": "Category slug is required",
+	}),
+	products: Joi.array().items(Joi.string().optional()).optional(),
+});
+
+export const updateCategorySchema = Joi.object({
+	name: Joi.string().optional(),
+	slug: Joi.string().optional(),
+	products: Joi.array().items(Joi.string().optional()).optional(),
 });

@@ -1,7 +1,7 @@
 // src/controllers/cartController.ts
 import { Request, Response, NextFunction } from "express";
 import Cart from "../models/cartModel";
-import Product from "../models/productModel"; // فرض بر اینکه این مدل موجود است
+import Product from "../models/productModel";
 
 // ایجاد یا بروزرسانی سبد خرید
 export const addToCart = async (
@@ -10,7 +10,7 @@ export const addToCart = async (
 	next: NextFunction,
 ) => {
 	try {
-		const userId = req.user?._id; // فرض بر اینکه از JWT استفاده می‌کنید و user.id در JWT ذخیره شده
+		const userId = req.user?._id;
 		const { productId, quantity } = req.body;
 
 		// بررسی وجود محصول

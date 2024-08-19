@@ -1,96 +1,83 @@
-import express from "express";
+// src/routes/categoryRoutes.ts
+import { Router } from "express";
 import {
 	createCategory,
-	getCategories,
+	getAllCategories,
 	getCategoryById,
+	getCategoryBySlug,
 	updateCategory,
 	deleteCategory,
 } from "../controllers/categoryController";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
  * tags:
- *   name: Category
- *   description: Category management
+ *   name: Categories
+ *   description: API for managing product categories
  */
-
-/**
- * @swagger
- * /categories:
- *   post:
- *     summary: Create a new category
- *     tags: [Category]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               description:
- *                 type: string
- *     responses:
- *       201:
- *         description: Category created successfully
- *       500:
- *         description: Server error
- */
-router.post("/categories", createCategory);
 
 /**
  * @swagger
  * /categories:
  *   get:
  *     summary: Get all categories
- *     tags: [Category]
+ *     tags: [Categories]
  *     responses:
  *       200:
- *         description: List of all categories
- *       500:
- *         description: Server error
+ *         description: A list of categories
  */
-router.get("/categories", getCategories);
+router.get("/", getAllCategories);
 
 /**
  * @swagger
  * /categories/{id}:
  *   get:
  *     summary: Get a category by ID
- *     tags: [Category]
+ *     tags: [Categories]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Category ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The category ID
  *     responses:
  *       200:
- *         description: Category details
+ *         description: The category data
  *       404:
  *         description: Category not found
- *       500:
- *         description: Server error
  */
-router.get("/categories/:id", getCategoryById);
+router.get("/:id", getCategoryById);
 
 /**
  * @swagger
- * /categories/{id}:
- *   put:
- *     summary: Update a category by ID
- *     tags: [Category]
+ * /categories/slug/{slug}:
+ *   get:
+ *     summary: Get a category by slug
+ *     tags: [Categories]
  *     parameters:
  *       - in: path
- *         name: id
- *         required: true
- *         description: Category ID
+ *         name: slug
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The category slug
+ *     responses:
+ *       200:
+ *         description: The category data
+ *       404:
+ *         description: Category not found
+ */
+router.get("/slug/:slug", getCategoryBySlug);
+
+/**
+ * @swagger
+ * /categories:
+ *   post:
+ *     summary: Create a new category
+ *     tags: [Categories]
  *     requestBody:
  *       required: true
  *       content:
@@ -100,39 +87,77 @@ router.get("/categories/:id", getCategoryById);
  *             properties:
  *               name:
  *                 type: string
- *               description:
+ *               slug:
  *                 type: string
+ *               products:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: The created category
+ *       400:
+ *         description: Bad request
+ */
+router.post("/", createCategory);
+
+/**
+ * @swagger
+ * /categories/{id}:
+ *   put:
+ *     summary: Update a category
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The category ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               products:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
- *         description: Category updated successfully
+ *         description: The updated category
+ *       400:
+ *         description: Bad request
  *       404:
  *         description: Category not found
- *       500:
- *         description: Server error
  */
-router.put("/categories/:id", updateCategory);
+router.put("/:id", updateCategory);
 
 /**
  * @swagger
  * /categories/{id}:
  *   delete:
- *     summary: Delete a category by ID
- *     tags: [Category]
+ *     summary: Delete a category
+ *     tags: [Categories]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Category ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The category ID
  *     responses:
  *       200:
- *         description: Category deleted successfully
+ *         description: Confirmation of category deletion
  *       404:
  *         description: Category not found
- *       500:
- *         description: Server error
  */
-router.delete("/categories/:id", deleteCategory);
+router.delete("/:id", deleteCategory);
 
 export default router;
