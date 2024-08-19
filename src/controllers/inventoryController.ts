@@ -1,60 +1,119 @@
-import { Request, Response } from "express";
+// src/controllers/inventoryController.ts
+import { Request, Response, NextFunction } from "express";
 import Inventory from "../models/inventoryModel";
+import {
+	createInventorySchema,
+	updateInventorySchema,
+} from "../validators/inventoryValidator";
 
-export const createInventoryItem = async (req: Request, res: Response) => {
+// ایجاد یک موجودی جدید برای محصول
+export const createInventory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const inventoryItem = new Inventory(req.body);
-		await inventoryItem.save();
-		res.status(201).json(inventoryItem);
+		const { error } = createInventorySchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const inventory = new Inventory(req.body);
+		await inventory.save();
+
+		res.status(201).json({ status: "success", data: inventory });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create inventory item" });
+		next(error);
 	}
 };
 
-export const getInventoryItems = async (req: Request, res: Response) => {
+// دریافت همه موجودی‌های محصولات
+export const getAllInventories = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const inventoryItems = await Inventory.find().populate("product");
-		res.status(200).json(inventoryItems);
+		const inventories = await Inventory.find().populate("product");
+		res.status(200).json({ status: "success", data: inventories });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch inventory items" });
+		next(error);
 	}
 };
 
-export const getInventoryItemById = async (req: Request, res: Response) => {
+// دریافت موجودی یک محصول خاص بر اساس ID
+export const getInventoryById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const inventoryItem = await Inventory.findById(req.params.id).populate(
-			"product",
-		);
-		if (!inventoryItem)
-			return res.status(404).json({ error: "Inventory item not found" });
-		res.status(200).json(inventoryItem);
+		const { id } = req.params;
+		const inventory = await Inventory.findById(id).populate("product");
+
+		if (!inventory) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Inventory not found" });
+		}
+
+		res.status(200).json({ status: "success", data: inventory });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch inventory item" });
+		next(error);
 	}
 };
 
-export const updateInventoryItem = async (req: Request, res: Response) => {
+// به‌روزرسانی موجودی محصول
+export const updateInventory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const inventoryItem = await Inventory.findByIdAndUpdate(
-			req.params.id,
-			req.body,
-			{ new: true },
-		);
-		if (!inventoryItem)
-			return res.status(404).json({ error: "Inventory item not found" });
-		res.status(200).json(inventoryItem);
+		const { id } = req.params;
+		const { error } = updateInventorySchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const inventory = await Inventory.findByIdAndUpdate(id, req.body, {
+			new: true,
+		});
+
+		if (!inventory) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Inventory not found" });
+		}
+
+		res.status(200).json({ status: "success", data: inventory });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to update inventory item" });
+		next(error);
 	}
 };
 
-export const deleteInventoryItem = async (req: Request, res: Response) => {
+// حذف موجودی یک محصول
+export const deleteInventory = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const inventoryItem = await Inventory.findByIdAndDelete(req.params.id);
-		if (!inventoryItem)
-			return res.status(404).json({ error: "Inventory item not found" });
-		res.status(200).json({ message: "Inventory item deleted" });
+		const { id } = req.params;
+		const inventory = await Inventory.findByIdAndDelete(id);
+
+		if (!inventory) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Inventory not found" });
+		}
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Inventory deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete inventory item" });
+		next(error);
 	}
 };

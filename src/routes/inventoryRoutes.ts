@@ -1,27 +1,28 @@
-import express from "express";
+// src/routes/inventoryRoutes.ts
+import { Router } from "express";
 import {
-	createInventoryItem,
-	getInventoryItems,
-	getInventoryItemById,
-	updateInventoryItem,
-	deleteInventoryItem,
+	createInventory,
+	getAllInventories,
+	getInventoryById,
+	updateInventory,
+	deleteInventory,
 } from "../controllers/inventoryController";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
  * tags:
- *   name: Inventory
- *   description: Inventory management
+ *   name: Inventories
+ *   description: API for managing product inventories
  */
 
 /**
  * @swagger
  * /inventories:
  *   post:
- *     summary: Create a new inventory item
- *     tags: [Inventory]
+ *     summary: Create a new inventory
+ *     tags: [Inventories]
  *     requestBody:
  *       required: true
  *       content:
@@ -32,65 +33,61 @@ const router = express.Router();
  *               product:
  *                 type: string
  *               quantity:
- *                 type: integer
+ *                 type: number
  *     responses:
  *       201:
- *         description: Inventory item created successfully
- *       500:
- *         description: Server error
+ *         description: The created inventory
+ *       400:
+ *         description: Bad request
  */
-router.post("/inventories", createInventoryItem);
+router.post("/", createInventory);
 
 /**
  * @swagger
  * /inventories:
  *   get:
- *     summary: Get all inventory items
- *     tags: [Inventory]
+ *     summary: Get all inventories
+ *     tags: [Inventories]
  *     responses:
  *       200:
- *         description: List of all inventory items
- *       500:
- *         description: Server error
+ *         description: A list of inventories
  */
-router.get("/inventories", getInventoryItems);
+router.get("/", getAllInventories);
 
 /**
  * @swagger
  * /inventories/{id}:
  *   get:
- *     summary: Get an inventory item by ID
- *     tags: [Inventory]
+ *     summary: Get an inventory by ID
+ *     tags: [Inventories]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Inventory item ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The inventory ID
  *     responses:
  *       200:
- *         description: Inventory item details
+ *         description: The inventory data
  *       404:
- *         description: Inventory item not found
- *       500:
- *         description: Server error
+ *         description: Inventory not found
  */
-router.get("/inventories/:id", getInventoryItemById);
+router.get("/:id", getInventoryById);
 
 /**
  * @swagger
  * /inventories/{id}:
  *   put:
- *     summary: Update an inventory item by ID
- *     tags: [Inventory]
+ *     summary: Update an inventory
+ *     tags: [Inventories]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Inventory item ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The inventory ID
  *     requestBody:
  *       required: true
  *       content:
@@ -101,38 +98,36 @@ router.get("/inventories/:id", getInventoryItemById);
  *               product:
  *                 type: string
  *               quantity:
- *                 type: integer
+ *                 type: number
  *     responses:
  *       200:
- *         description: Inventory item updated successfully
+ *         description: The updated inventory
+ *       400:
+ *         description: Bad request
  *       404:
- *         description: Inventory item not found
- *       500:
- *         description: Server error
+ *         description: Inventory not found
  */
-router.put("/inventories/:id", updateInventoryItem);
+router.put("/:id", updateInventory);
 
 /**
  * @swagger
  * /inventories/{id}:
  *   delete:
- *     summary: Delete an inventory item by ID
- *     tags: [Inventory]
+ *     summary: Delete an inventory
+ *     tags: [Inventories]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Inventory item ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The inventory ID
  *     responses:
  *       200:
- *         description: Inventory item deleted successfully
+ *         description: Confirmation of inventory deletion
  *       404:
- *         description: Inventory item not found
- *       500:
- *         description: Server error
+ *         description: Inventory not found
  */
-router.delete("/inventories/:id", deleteInventoryItem);
+router.delete("/:id", deleteInventory);
 
 export default router;
