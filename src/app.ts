@@ -1,6 +1,6 @@
 // src/app.ts
 import express, { Application } from "express";
-import { setupSwagger } from "./swagger";
+import { setupSwagger } from "./utils/swagger";
 import morgan from "morgan";
 
 import productRoutes from "./routes/productRoutes";
