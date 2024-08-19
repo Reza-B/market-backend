@@ -1,53 +1,119 @@
-import { Request, Response } from "express";
+// src/controllers/discountController.ts
+import { Request, Response, NextFunction } from "express";
 import Discount from "../models/discountModel";
+import {
+	createDiscountSchema,
+	updateDiscountSchema,
+} from "../validators/discountValidator";
 
-export const createDiscount = async (req: Request, res: Response) => {
+// ایجاد یک کد تخفیف جدید
+export const createDiscount = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const { error } = createDiscountSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
 		const discount = new Discount(req.body);
 		await discount.save();
-		res.status(201).json(discount);
+
+		res.status(201).json({ status: "success", data: discount });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create discount" });
+		next(error);
 	}
 };
 
-export const getDiscounts = async (req: Request, res: Response) => {
+// دریافت همه کدهای تخفیف
+export const getAllDiscounts = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
 		const discounts = await Discount.find();
-		res.status(200).json(discounts);
+		res.status(200).json({ status: "success", data: discounts });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch discounts" });
+		next(error);
 	}
 };
 
-export const getDiscountById = async (req: Request, res: Response) => {
+// دریافت کد تخفیف بر اساس ID
+export const getDiscountById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const discount = await Discount.findById(req.params.id);
-		if (!discount) return res.status(404).json({ error: "Discount not found" });
-		res.status(200).json(discount);
+		const { id } = req.params;
+		const discount = await Discount.findById(id);
+
+		if (!discount) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Discount not found" });
+		}
+
+		res.status(200).json({ status: "success", data: discount });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch discount" });
+		next(error);
 	}
 };
 
-export const updateDiscount = async (req: Request, res: Response) => {
+// به‌روزرسانی کد تخفیف
+export const updateDiscount = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const discount = await Discount.findByIdAndUpdate(req.params.id, req.body, {
+		const { id } = req.params;
+		const { error } = updateDiscountSchema.validate(req.body);
+		if (error)
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+
+		const discount = await Discount.findByIdAndUpdate(id, req.body, {
 			new: true,
 		});
-		if (!discount) return res.status(404).json({ error: "Discount not found" });
-		res.status(200).json(discount);
+
+		if (!discount) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Discount not found" });
+		}
+
+		res.status(200).json({ status: "success", data: discount });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to update discount" });
+		next(error);
 	}
 };
 
-export const deleteDiscount = async (req: Request, res: Response) => {
+// حذف کد تخفیف
+export const deleteDiscount = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const discount = await Discount.findByIdAndDelete(req.params.id);
-		if (!discount) return res.status(404).json({ error: "Discount not found" });
-		res.status(200).json({ message: "Discount deleted" });
+		const { id } = req.params;
+		const discount = await Discount.findByIdAndDelete(id);
+
+		if (!discount) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Discount not found" });
+		}
+
+		res
+			.status(200)
+			.json({ status: "success", message: "Discount deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete discount" });
+		next(error);
 	}
 };

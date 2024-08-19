@@ -1,19 +1,20 @@
-import express from "express";
+// src/routes/discountRoutes.ts
+import { Router } from "express";
 import {
 	createDiscount,
-	getDiscounts,
+	getAllDiscounts,
 	getDiscountById,
 	updateDiscount,
 	deleteDiscount,
 } from "../controllers/discountController";
 
-const router = express.Router();
+const router = Router();
 
 /**
  * @swagger
  * tags:
- *   name: Discount
- *   description: Discount management
+ *   name: Discounts
+ *   description: API for managing discounts
  */
 
 /**
@@ -21,7 +22,7 @@ const router = express.Router();
  * /discounts:
  *   post:
  *     summary: Create a new discount
- *     tags: [Discount]
+ *     tags: [Discounts]
  *     requestBody:
  *       required: true
  *       content:
@@ -31,69 +32,70 @@ const router = express.Router();
  *             properties:
  *               code:
  *                 type: string
- *               amount:
+ *               percentage:
  *                 type: number
- *               expiryDate:
+ *               validFrom:
  *                 type: string
- *                 format: date
+ *                 format: date-time
+ *               validUntil:
+ *                 type: string
+ *                 format: date-time
+ *               usageLimit:
+ *                 type: number
  *     responses:
  *       201:
- *         description: Discount created successfully
- *       500:
- *         description: Server error
+ *         description: The created discount
+ *       400:
+ *         description: Bad request
  */
-router.post("/discounts", createDiscount);
+router.post("/", createDiscount);
 
 /**
  * @swagger
  * /discounts:
  *   get:
  *     summary: Get all discounts
- *     tags: [Discount]
+ *     tags: [Discounts]
  *     responses:
  *       200:
- *         description: List of all discounts
- *       500:
- *         description: Server error
+ *         description: A list of discounts
  */
-router.get("/discounts", getDiscounts);
+router.get("/", getAllDiscounts);
 
 /**
  * @swagger
  * /discounts/{id}:
  *   get:
  *     summary: Get a discount by ID
- *     tags: [Discount]
+ *     tags: [Discounts]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Discount ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The discount ID
  *     responses:
  *       200:
- *         description: Discount details
+ *         description: The discount data
  *       404:
  *         description: Discount not found
- *       500:
- *         description: Server error
  */
-router.get("/discounts/:id", getDiscountById);
+router.get("/:id", getDiscountById);
 
 /**
  * @swagger
  * /discounts/{id}:
  *   put:
- *     summary: Update a discount by ID
- *     tags: [Discount]
+ *     summary: Update a discount
+ *     tags: [Discounts]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Discount ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The discount ID
  *     requestBody:
  *       required: true
  *       content:
@@ -103,42 +105,45 @@ router.get("/discounts/:id", getDiscountById);
  *             properties:
  *               code:
  *                 type: string
- *               amount:
+ *               percentage:
  *                 type: number
- *               expiryDate:
+ *               validFrom:
  *                 type: string
- *                 format: date
+ *                 format: date-time
+ *               validUntil:
+ *                 type: string
+ *                 format: date-time
+ *               usageLimit:
+ *                 type: number
  *     responses:
  *       200:
- *         description: Discount updated successfully
+ *         description: The updated discount
+ *       400:
+ *         description: Bad request
  *       404:
  *         description: Discount not found
- *       500:
- *         description: Server error
  */
-router.put("/discounts/:id", updateDiscount);
+router.put("/:id", updateDiscount);
 
 /**
  * @swagger
  * /discounts/{id}:
  *   delete:
- *     summary: Delete a discount by ID
- *     tags: [Discount]
+ *     summary: Delete a discount
+ *     tags: [Discounts]
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: Discount ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: The discount ID
  *     responses:
  *       200:
- *         description: Discount deleted successfully
+ *         description: Confirmation of discount deletion
  *       404:
  *         description: Discount not found
- *       500:
- *         description: Server error
  */
-router.delete("/discounts/:id", deleteDiscount);
+router.delete("/:id", deleteDiscount);
 
 export default router;
