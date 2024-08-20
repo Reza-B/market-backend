@@ -30,7 +30,7 @@ app.use("/api/discounts", discountRoutes);
 app.use("/api/inventories", inventoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api", productRoutes);
+app.use("/api/products", productRoutes);
 app.use("/api", shippingRoutes);
 
 app.use(errorMiddleware);

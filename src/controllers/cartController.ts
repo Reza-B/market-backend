@@ -40,13 +40,13 @@ export const addToCart = async (
 			cart = new Cart({
 				user: userId,
 				items: [{ product: productId, quantity }],
-				totalPrice: product.price * quantity,
+				totalPrice: product.discountedPrice * quantity,
 			});
 		}
 
 		// بروزرسانی قیمت کل
 		cart.totalPrice = cart.items.reduce(
-			(acc, item) => acc + item.quantity * product.price,
+			(acc, item) => acc + item.quantity * product.discountedPrice,
 			0,
 		);
 
@@ -107,7 +107,7 @@ export const removeFromCart = async (
 
 			// بروزرسانی قیمت کل
 			cart.totalPrice = cart.items.reduce(
-				(acc, item) => acc + item.quantity * item.product.price,
+				(acc, item) => acc + item.quantity * item.product.discountedPrice,
 				0,
 			);
 

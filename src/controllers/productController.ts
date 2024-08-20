@@ -1,106 +1,235 @@
-// // src/controllers/productController.ts
-// import { Request, Response } from "express";
-// import Product from "../models/Product";
-
-// export const getProducts = async (req: Request, res: Response) => {
-// 	try {
-// 		const products = await Product.find()
-// 			.populate("category")
-// 			.populate("colors");
-// 		res.json(products);
-// 	} catch (err: any) {
-// 		res.status(500).json({ message: err.message });
-// 	}
-// };
-
-// export const getProductById = async (req: Request, res: Response) => {
-// 	try {
-// 		const product = await Product.findById(req.params.id)
-// 			.populate("category")
-// 			.populate("colors");
-// 		if (!product) return res.status(404).json({ message: "Product not found" });
-// 		res.json(product);
-// 	} catch (err: any) {
-// 		res.status(500).json({ message: err.message });
-// 	}
-// };
-
-// export const createProduct = async (req: Request, res: Response) => {
-// 	const { imgUrl, name, title, category, description, price, color, colors } =
-// 		req.body;
-
-// 	const newProduct = new Product({
-// 		imgUrl,
-// 		name,
-// 		title,
-// 		category,
-// 		description,
-// 		price,
-// 		color,
-// 		colors,
-// 		created: new Date(),
-// 	});
-
-// 	try {
-// 		const savedProduct = await newProduct.save();
-// 		res.status(201).json(savedProduct);
-// 	} catch (err: any) {
-// 		res.status(500).json({ message: err.message });
-// 	}
-// };
-
-import { Request, Response } from "express";
+// src/controllers/productController.ts
+import { Request, Response, NextFunction } from "express";
 import Product from "../models/productModel";
+import { productSchema } from "../validators/productValidator";
 
-export const createProduct = async (req: Request, res: Response) => {
+// دریافت یک محصول بر اساس شناسه
+export const getProductById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const { id } = req.params;
+		const product = await Product.findById(id)
+			.populate("category")
+			.populate("variants");
+
+		if (!product) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Product not found" });
+		}
+
+		res.status(200).json({ status: "success", data: product });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت 12 تا از جدیدترین محصولات
+export const getLatestProducts = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const products = await Product.find()
+			.sort({ createdAt: -1 })
+			.limit(12)
+			.select(
+				"name mainImage basePrice discountedPrice discountPercentage isOnSale slug",
+			);
+
+		res.status(200).json({ status: "success", data: products });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت 12 عدد از محصولات دارای بیشترین تخفیف
+export const getTopDiscountedProducts = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const products = await Product.find({ isOnSale: true })
+			.sort({ discountPercentage: -1 })
+			.limit(12)
+			.select(
+				"name mainImage basePrice discountedPrice discountPercentage isOnSale slug",
+			);
+
+		res.status(200).json({ status: "success", data: products });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت 12 محصول دارای تخفیف به صورت رندوم
+export const getRandomDiscountedProducts = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const products = await Product.aggregate([
+			{ $match: { isOnSale: true } },
+			{ $sample: { size: 12 } },
+			{
+				$project: {
+					name: 1,
+					mainImage: 1,
+					basePrice: 1,
+					discountedPrice: 1,
+					discountPercentage: 1,
+					isOnSale: 1,
+					slug: 1,
+				},
+			},
+		]);
+
+		res.status(200).json({ status: "success", data: products });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت تمام محصولات با نام، id، قیمت، تصویر اصلی، slug و وضعیت موجودی
+export const getAllProductSummary = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const products = await Product.find()
+			.select("name _id basePrice mainImage slug")
+			.populate("inventory", "quantity"); // Assuming you have an Inventory model and it's referenced in Product
+
+		res.status(200).json({ status: "success", data: products });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// دریافت تمام محصولات
+export const getAllProducts = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const products = await Product.find()
+			.populate("category")
+			.populate("variants");
+
+		res.status(200).json({ status: "success", data: products });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// ساخت محصول جدید
+export const createProduct = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		// اعتبارسنجی داده‌های ورودی
+		const { error } = productSchema.validate(req.body);
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+		}
+
 		const product = new Product(req.body);
+
+		// محاسبه قیمت تخفیف‌خورده
+		if (product.isOnSale) {
+			product.discountedPrice =
+				product.basePrice -
+				(product.basePrice * product.discountPercentage) / 100;
+		} else {
+			product.discountedPrice = product.basePrice;
+		}
+
 		await product.save();
-		res.status(201).json(product);
+		res.status(201).json({ status: "success", data: product });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create product" });
+		next(error);
 	}
 };
 
-export const getProducts = async (req: Request, res: Response) => {
+// ویرایش محصول
+export const updateProduct = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const products = await Product.find().populate("category reviews");
-		res.status(200).json(products);
+		const { id } = req.params;
+		const updates = req.body;
+
+		// اعتبارسنجی داده‌های ورودی
+		const { error } = productSchema.validate(updates);
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+		}
+
+		// محاسبه قیمت تخفیف‌خورده بر اساس داده‌های ورودی
+		if (
+			updates.basePrice !== undefined ||
+			updates.discountPercentage !== undefined ||
+			updates.isOnSale !== undefined
+		) {
+			if (updates.isOnSale) {
+				updates.discountedPrice =
+					updates.basePrice -
+					(updates.basePrice * updates.discountPercentage) / 100;
+			} else {
+				updates.discountedPrice = updates.basePrice;
+			}
+		}
+
+		const product = await Product.findByIdAndUpdate(id, updates, { new: true });
+
+		if (!product) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Product not found" });
+		}
+
+		res.status(200).json({ status: "success", data: product });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch products" });
+		next(error);
 	}
 };
 
-export const getProductById = async (req: Request, res: Response) => {
+// حذف محصول
+export const deleteProduct = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const product = await Product.findById(req.params.id).populate(
-			"category reviews",
-		);
-		if (!product) return res.status(404).json({ error: "Product not found" });
-		res.status(200).json(product);
-	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch product" });
-	}
-};
+		const { id } = req.params;
+		const product = await Product.findByIdAndDelete(id);
 
-export const updateProduct = async (req: Request, res: Response) => {
-	try {
-		const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-		});
-		if (!product) return res.status(404).json({ error: "Product not found" });
-		res.status(200).json(product);
-	} catch (error) {
-		res.status(500).json({ error: "Failed to update product" });
-	}
-};
+		if (!product) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Product not found" });
+		}
 
-export const deleteProduct = async (req: Request, res: Response) => {
-	try {
-		const product = await Product.findByIdAndDelete(req.params.id);
-		if (!product) return res.status(404).json({ error: "Product not found" });
-		res.status(200).json({ message: "Product deleted" });
+		res
+			.status(204)
+			.json({ status: "success", message: "Product deleted successfully" });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete product" });
+		next(error);
 	}
 };

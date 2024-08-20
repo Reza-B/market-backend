@@ -1,6 +1,9 @@
-import { Document } from "mongoose";
-import { ICategory } from "./ICategory";
-import { IReview } from "./IReview";
+import { Document, ObjectId } from "mongoose";
+
+export interface IVariant {
+	name: string;
+	additionalPrice: number;
+}
 
 export interface IProduct extends Document {
 	name: string;
@@ -11,8 +14,11 @@ export interface IProduct extends Document {
 	keyFeatures: string[];
 	sizes: string[];
 	description: string;
-	reviews: IReview[];
-	price: number;
+	isOnSale: boolean;
+	discountPercentage: number;
+	basePrice: number;
+	discountedPrice: number;
+	variants: IVariant[];
+	category: ObjectId;
 	createdAt: Date;
-	category: ICategory;
 }
