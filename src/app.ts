@@ -10,6 +10,7 @@ import paymentRoutes from "./routes/paymentRoutes";
 import productRoutes from "./routes/productRoutes";
 import shippingRoutes from "./routes/shippingRoutes";
 import userRoutes from "./routes/userRoutes";
+import reviewRoutes from "./routes/reviewRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import errorMiddleware from "./middlewares/errorMiddleware";
 
@@ -31,7 +32,8 @@ app.use("/api/inventories", inventoryRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api", shippingRoutes);
+app.use("/api/shipping", shippingRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use(errorMiddleware);
 

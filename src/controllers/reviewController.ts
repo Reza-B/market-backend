@@ -1,80 +1,142 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import Review from "../models/reviewModel";
-import Product from "../models/productModel";
+import { reviewSchema } from "../validators/reviewValidator";
 
-export const createReview = async (req: Request, res: Response) => {
+// ایجاد یک نقد و بررسی جدید
+export const createReview = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
+		const { error } = reviewSchema.validate(req.body);
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
+		}
+
 		const review = new Review(req.body);
 		await review.save();
+		res.status(201).json({ status: "success", data: review });
+	} catch (error) {
+		next(error);
+	}
+};
 
-		// Update product rating and review count
-		const product = await Product.findById(req.body.product);
-		if (product) {
-			product.ratingCount += 1;
-			product.rating =
-				(product.rating * (product.ratingCount - 1) + review.rating) /
-				product.ratingCount;
-			await product.save();
+// به‌روزرسانی نقد و بررسی بر اساس شناسه
+export const updateReview = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { id } = req.params;
+		const { error } = reviewSchema.validate(req.body, { abortEarly: false });
+		if (error) {
+			return res
+				.status(400)
+				.json({ status: "error", message: error.details[0].message });
 		}
 
-		res.status(201).json(review);
+		const review = await Review.findByIdAndUpdate(id, req.body, { new: true });
+		if (!review) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Review not found" });
+		}
+
+		res.status(200).json({ status: "success", data: review });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to create review" });
+		next(error);
 	}
 };
 
-export const getReviews = async (req: Request, res: Response) => {
+// دریافت اطلاعات یک نقد و بررسی بر اساس شناسه
+export const getReviewById = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const reviews = await Review.find().populate("user product");
-		res.status(200).json(reviews);
+		const { id } = req.params;
+		const review = await Review.findById(id)
+			.populate("user")
+			.populate("product");
+
+		if (!review) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Review not found" });
+		}
+
+		res.status(200).json({ status: "success", data: review });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch reviews" });
+		next(error);
 	}
 };
 
-export const getReviewById = async (req: Request, res: Response) => {
+// دریافت تمام نقد و بررسی‌ها
+export const getAllReviews = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
 	try {
-		const review = await Review.findById(req.params.id).populate(
-			"user product",
+		const reviews = await Review.find().populate("user").populate("product");
+		res.status(200).json({ status: "success", data: reviews });
+	} catch (error) {
+		next(error);
+	}
+};
+
+// حذف یک نقد و بررسی بر اساس شناسه
+export const deleteReview = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { id } = req.params;
+		const review = await Review.findByIdAndDelete(id);
+
+		if (!review) {
+			return res
+				.status(404)
+				.json({ status: "error", message: "Review not found" });
+		}
+
+		res
+			.status(204)
+			.json({ status: "success", message: "Review deleted successfully" });
+	} catch (error) {
+		next(error);
+	}
+};
+
+export const getReviewsByProductId = async (
+	req: Request,
+	res: Response,
+	next: NextFunction,
+) => {
+	try {
+		const { productId } = req.params;
+		const reviews = await Review.find({ product: productId }).populate(
+			"user",
+			"firstName",
+			"lastName",
+			"profilePicture",
 		);
-		if (!review) return res.status(404).json({ error: "Review not found" });
-		res.status(200).json(review);
-	} catch (error) {
-		res.status(500).json({ error: "Failed to fetch review" });
-	}
-};
 
-export const updateReview = async (req: Request, res: Response) => {
-	try {
-		const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
-			new: true,
-		});
-		if (!review) return res.status(404).json({ error: "Review not found" });
-		res.status(200).json(review);
-	} catch (error) {
-		res.status(500).json({ error: "Failed to update review" });
-	}
-};
-
-export const deleteReview = async (req: Request, res: Response) => {
-	try {
-		const review = await Review.findByIdAndDelete(req.params.id);
-		if (!review) return res.status(404).json({ error: "Review not found" });
-
-		// Update product rating and review count
-		const product = await Product.findById(review.product);
-		if (product) {
-			product.ratingCount -= 1;
-			product.rating =
-				product.ratingCount > 0
-					? (product.rating * (product.ratingCount + 1) - review.rating) /
-					  product.ratingCount
-					: 0;
-			await product.save();
+		if (!reviews.length) {
+			return res.status(404).json({
+				status: "error",
+				message: "No reviews found for this product",
+			});
 		}
 
-		res.status(200).json({ message: "Review deleted" });
+		res.status(200).json({ status: "success", data: reviews });
 	} catch (error) {
-		res.status(500).json({ error: "Failed to delete review" });
+		next(error);
 	}
 };
