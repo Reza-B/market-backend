@@ -6,7 +6,7 @@ import {
 	updateInventory,
 	deleteInventory,
 } from "../controllers/inventoryController";
-import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = Router();
 
@@ -42,7 +42,7 @@ const router = Router();
  *       400:
  *         description: Bad request
  */
-router.post("/", authMiddleware, createInventory);
+router.post("/", adminAuthMiddleware, createInventory);
 
 /**
  * @swagger
@@ -56,7 +56,7 @@ router.post("/", authMiddleware, createInventory);
  *       200:
  *         description: A list of inventories
  */
-router.get("/", authMiddleware, getAllInventories);
+router.get("/", adminAuthMiddleware, getAllInventories);
 
 /**
  * @swagger
@@ -64,8 +64,6 @@ router.get("/", authMiddleware, getAllInventories);
  *   get:
  *     summary: Get an inventory by ID
  *     tags: [Inventories]
- *     security:
- *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -79,7 +77,7 @@ router.get("/", authMiddleware, getAllInventories);
  *       404:
  *         description: Inventory not found
  */
-router.get("/:id", authMiddleware, getInventoryById);
+router.get("/:id", getInventoryById);
 
 /**
  * @swagger
@@ -115,7 +113,7 @@ router.get("/:id", authMiddleware, getInventoryById);
  *       404:
  *         description: Inventory not found
  */
-router.put("/:id", authMiddleware, updateInventory);
+router.put("/:id", adminAuthMiddleware, updateInventory);
 
 /**
  * @swagger
@@ -138,6 +136,6 @@ router.put("/:id", authMiddleware, updateInventory);
  *       404:
  *         description: Inventory not found
  */
-router.delete("/:id", authMiddleware, deleteInventory);
+router.delete("/:id", adminAuthMiddleware, deleteInventory);
 
 export default router;

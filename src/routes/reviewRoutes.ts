@@ -8,6 +8,7 @@ import {
 	getReviewsByProductId,
 } from "../controllers/reviewController";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = express.Router();
 
@@ -194,6 +195,6 @@ router.get("/product/:productId", getReviewsByProductId);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", authMiddleware, deleteReview);
+router.delete("/:id", adminAuthMiddleware, deleteReview);
 
 export default router;

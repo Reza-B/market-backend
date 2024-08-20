@@ -8,7 +8,7 @@ import {
 	deleteCategory,
 	upload,
 } from "../controllers/categoryController";
-import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = Router();
 
@@ -105,7 +105,7 @@ router.get("/slug/:slug", getCategoryBySlug);
  *       400:
  *         description: Bad request
  */
-router.post("/", authMiddleware, upload.single("image"), createCategory);
+router.post("/", adminAuthMiddleware, upload.single("image"), createCategory);
 
 /**
  * @swagger
@@ -148,7 +148,7 @@ router.post("/", authMiddleware, upload.single("image"), createCategory);
  *       404:
  *         description: Category not found
  */
-router.put("/:id", authMiddleware, upload.single("image"), updateCategory);
+router.put("/:id", adminAuthMiddleware, upload.single("image"), updateCategory);
 
 /**
  * @swagger
@@ -171,6 +171,6 @@ router.put("/:id", authMiddleware, upload.single("image"), updateCategory);
  *       404:
  *         description: Category not found
  */
-router.delete("/:id", authMiddleware, deleteCategory);
+router.delete("/:id", adminAuthMiddleware, deleteCategory);
 
 export default router;

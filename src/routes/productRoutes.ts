@@ -11,6 +11,7 @@ import {
 	getAllProducts,
 } from "../controllers/productController";
 import { authMiddleware } from "../middlewares/authMiddleware";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = express.Router();
 
@@ -235,7 +236,7 @@ router.get("/", getAllProducts);
  *       500:
  *         description: Server error
  */
-router.post("/", authMiddleware, createProduct);
+router.post("/", adminAuthMiddleware, createProduct);
 
 /**
  * @swagger
@@ -329,7 +330,7 @@ router.post("/", authMiddleware, createProduct);
  *       500:
  *         description: Server error
  */
-router.put("/:id", authMiddleware, updateProduct);
+router.put("/:id", adminAuthMiddleware, updateProduct);
 
 /**
  * @swagger
@@ -354,6 +355,6 @@ router.put("/:id", authMiddleware, updateProduct);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", authMiddleware, deleteProduct);
+router.delete("/:id", adminAuthMiddleware, deleteProduct);
 
 export default router;

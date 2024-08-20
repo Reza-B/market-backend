@@ -7,6 +7,7 @@ import {
 	deleteDiscount,
 } from "../controllers/discountController";
 import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = Router();
 
@@ -50,7 +51,7 @@ const router = Router();
  *       400:
  *         description: Bad request
  */
-router.post("/", authMiddleware, createDiscount);
+router.post("/", adminAuthMiddleware, createDiscount);
 
 /**
  * @swagger
@@ -131,7 +132,7 @@ router.get("/:id", authMiddleware, getDiscountById);
  *       404:
  *         description: Discount not found
  */
-router.put("/:id", authMiddleware, updateDiscount);
+router.put("/:id", adminAuthMiddleware, updateDiscount);
 
 /**
  * @swagger
@@ -154,6 +155,6 @@ router.put("/:id", authMiddleware, updateDiscount);
  *       404:
  *         description: Discount not found
  */
-router.delete("/:id", authMiddleware, deleteDiscount);
+router.delete("/:id", adminAuthMiddleware, deleteDiscount);
 
 export default router;

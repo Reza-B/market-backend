@@ -5,7 +5,7 @@ import {
 	getSliderById,
 	deleteSlider,
 } from "../controllers/sliderController";
-import { authMiddleware } from "../middlewares/authMiddleware";
+import { adminAuthMiddleware } from "../middlewares/adminAuthMiddleware";
 
 const router = express.Router();
 
@@ -119,7 +119,7 @@ const router = express.Router();
  *       scheme: bearer
  *       bearerFormat: JWT
  */
-router.post("/", authMiddleware, createSlider);
+router.post("/", adminAuthMiddleware, createSlider);
 
 /**
  * @swagger
@@ -222,6 +222,6 @@ router.get("/:id", getSliderById);
  *       scheme: bearer
  *       bearerFormat: JWT
  */
-router.delete("/:id", authMiddleware, deleteSlider);
+router.delete("/:id", adminAuthMiddleware, deleteSlider);
 
 export default router;
