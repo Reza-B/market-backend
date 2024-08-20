@@ -1,4 +1,3 @@
-// src/controllers/categoryController.ts
 import { Request, Response, NextFunction } from "express";
 import Category from "../models/categoryModel";
 import {
@@ -6,23 +5,53 @@ import {
 	updateCategorySchema,
 } from "../validators/categoryValidator";
 
-// ایجاد دسته‌بندی جدید
+import multer from "multer";
+import path from "path";
+
+// تنظیم مکان و نام فایل‌های آپلود شده
+const storage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, "uploads/");
+	},
+	filename: (req, file, cb) => {
+		cb(null, Date.now() + path.extname(file.originalname));
+	},
+});
+
+// فیلتر کردن فایل‌ها بر اساس نوع (فقط تصاویر)
+const fileFilter = (req: any, file: any, cb: any) => {
+	if (file.mimetype.startsWith("image/")) {
+		cb(null, true);
+	} else {
+		cb(new Error("Only images are allowed!"), false);
+	}
+};
+
+export const upload = multer({ storage, fileFilter });
+
 export const createCategory = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		const { error } = createCategorySchema.validate(req.body);
+		let { name, slug, products } = req.body;
+		if (products === "") {
+			products = undefined;
+		}
+		const { error } = createCategorySchema.validate({
+			name,
+			slug,
+			products,
+		});
 		if (error) {
 			return res
 				.status(400)
 				.json({ status: "error", message: error.details[0].message });
 		}
 
-		const { name, slug, products } = req.body;
-
-		const category = new Category({ name, slug, products });
+		const image = req.file ? req.file.filename : undefined;
+		const category = new Category({ name, slug, products, image });
 		await category.save();
 
 		res.status(201).json({ status: "success", data: category });
@@ -96,7 +125,11 @@ export const updateCategory = async (
 	next: NextFunction,
 ) => {
 	try {
-		const { error } = updateCategorySchema.validate(req.body);
+		let { name, slug, products } = req.body;
+		if (products === "") {
+			products = undefined;
+		}
+		const { error } = updateCategorySchema.validate({ name, slug, products });
 		if (error) {
 			return res
 				.status(400)
@@ -104,11 +137,16 @@ export const updateCategory = async (
 		}
 
 		const { id } = req.params;
-		const updates = req.body;
+		const image = req.file ? req.file.filename : undefined;
 
-		const updatedCategory = await Category.findByIdAndUpdate(id, updates, {
-			new: true,
-		});
+		// به‌روزرسانی دسته‌بندی
+		const updatedCategory = await Category.findByIdAndUpdate(
+			id,
+			{ name, slug, products, image },
+			{
+				new: true,
+			},
+		);
 
 		if (!updatedCategory) {
 			return res

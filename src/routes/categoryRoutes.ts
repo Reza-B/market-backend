@@ -7,6 +7,7 @@ import {
 	getCategoryBySlug,
 	updateCategory,
 	deleteCategory,
+	upload,
 } from "../controllers/categoryController";
 
 const router = Router();
@@ -81,7 +82,7 @@ router.get("/slug/:slug", getCategoryBySlug);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -93,13 +94,16 @@ router.get("/slug/:slug", getCategoryBySlug);
  *                 type: array
  *                 items:
  *                   type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: The created category
  *       400:
  *         description: Bad request
  */
-router.post("/", createCategory);
+router.post("/", upload.single("image"), createCategory);
 
 /**
  * @swagger
@@ -117,7 +121,7 @@ router.post("/", createCategory);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -129,6 +133,9 @@ router.post("/", createCategory);
  *                 type: array
  *                 items:
  *                   type: string
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: The updated category
@@ -137,7 +144,7 @@ router.post("/", createCategory);
  *       404:
  *         description: Category not found
  */
-router.put("/:id", updateCategory);
+router.put("/:id", upload.single("image"), updateCategory);
 
 /**
  * @swagger

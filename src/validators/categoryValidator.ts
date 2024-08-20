@@ -1,4 +1,3 @@
-// src/validators/categoryValidator.ts
 import Joi from "joi";
 
 export const createCategorySchema = Joi.object({
@@ -10,11 +9,11 @@ export const createCategorySchema = Joi.object({
 		"string.empty": "Category slug is required",
 		"any.required": "Category slug is required",
 	}),
-	products: Joi.array().items(Joi.string().optional()).optional(),
+	products: Joi.array().items(Joi.string()).optional(),
 });
 
 export const updateCategorySchema = Joi.object({
 	name: Joi.string().optional(),
 	slug: Joi.string().optional(),
-	products: Joi.array().items(Joi.string().optional()).optional(),
+	products: Joi.array().items(Joi.string()).optional(),
 });

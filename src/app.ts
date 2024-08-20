@@ -14,8 +14,12 @@ import reviewRoutes from "./routes/reviewRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import errorMiddleware from "./middlewares/errorMiddleware";
 import sliderRoutes from "./routes/sliderRoutes";
+import path from "path";
 
 const app: Application = express();
+
+// Static folder
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Middleware
 app.use(express.json());
