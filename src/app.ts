@@ -13,6 +13,7 @@ import userRoutes from "./routes/userRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import errorMiddleware from "./middlewares/errorMiddleware";
+import sliderRoutes from "./routes/sliderRoutes";
 
 const app: Application = express();
 
@@ -34,6 +35,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/slider", sliderRoutes);
 
 app.use(errorMiddleware);
 
