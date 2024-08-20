@@ -11,6 +11,7 @@ import {
 	loginWithCode,
 	upload,
 } from "../controllers/userController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
@@ -199,26 +200,28 @@ router.post("/request-verification-code", requestVerificationCodeForLogin);
  * @swagger
  * /users/me:
  *   get:
- *     summary: Get user information by authentication token
+ *     summary: Get current user info
  *     tags: [User]
  *     security:
- *       - bearerAuth: []
+ *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: User information retrieved successfully
+ *         description: User info retrieved successfully
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized - No token provided or invalid token
  *       500:
  *         description: Server error
  */
-router.get("/me", getUserInfo);
+router.get("/me", authMiddleware, getUserInfo);
 
 /**
  * @swagger
  * /users/{id}:
  *   delete:
- *     summary: Delete a user by ID
+ *     summary: Delete user by ID
  *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -234,7 +237,7 @@ router.get("/me", getUserInfo);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", deleteUser);
+router.delete("/:id", authMiddleware, deleteUser);
 
 /**
  * @swagger
@@ -242,6 +245,8 @@ router.delete("/:id", deleteUser);
  *   put:
  *     summary: Update user information by ID
  *     tags: [User]
+ *     security:
+ *       - BearerAuth: []  # اگر مسیر به احراز هویت نیاز دارد
  *     parameters:
  *       - in: path
  *         name: id
@@ -353,6 +358,6 @@ router.delete("/:id", deleteUser);
  *                   type: string
  *                   example: Server error
  */
-router.put("/:id", upload.single("profilePicture"), updateUser);
+router.put("/:id", authMiddleware, upload.single("profilePicture"), updateUser);
 
 export default router;

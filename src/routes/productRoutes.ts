@@ -10,6 +10,7 @@ import {
 	getAllProductSummary,
 	getAllProducts,
 } from "../controllers/productController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
@@ -189,6 +190,8 @@ router.get("/", getAllProducts);
  *   post:
  *     summary: Create a new product
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -232,7 +235,7 @@ router.get("/", getAllProducts);
  *       500:
  *         description: Server error
  */
-router.post("/", createProduct);
+router.post("/", authMiddleware, createProduct);
 
 /**
  * @swagger
@@ -240,6 +243,8 @@ router.post("/", createProduct);
  *   put:
  *     summary: Update a product by ID
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -324,7 +329,7 @@ router.post("/", createProduct);
  *       500:
  *         description: Server error
  */
-router.put("/:id", updateProduct);
+router.put("/:id", authMiddleware, updateProduct);
 
 /**
  * @swagger
@@ -332,6 +337,8 @@ router.put("/:id", updateProduct);
  *   delete:
  *     summary: Delete a product by ID
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -347,6 +354,6 @@ router.put("/:id", updateProduct);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", deleteProduct);
+router.delete("/:id", authMiddleware, deleteProduct);
 
 export default router;

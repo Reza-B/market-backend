@@ -2,6 +2,7 @@
 import { Request, Response, NextFunction } from "express";
 import Cart from "../models/cartModel";
 import Product from "../models/productModel";
+import { IUser } from "../types";
 
 // ایجاد یا بروزرسانی سبد خرید
 export const addToCart = async (

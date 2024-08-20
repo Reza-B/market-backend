@@ -6,6 +6,7 @@ import {
 	updateOrder,
 	deleteOrder,
 } from "../controllers/orderController";
+import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
 
 const router = Router();
 
@@ -22,6 +23,8 @@ const router = Router();
  *   post:
  *     summary: Create a new order
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -56,7 +59,7 @@ const router = Router();
  *       400:
  *         description: Bad request
  */
-router.post("/", createOrder);
+router.post("/", authMiddleware, createOrder);
 
 /**
  * @swagger
@@ -64,11 +67,13 @@ router.post("/", createOrder);
  *   get:
  *     summary: Get all orders
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of orders
  */
-router.get("/", getAllOrders);
+router.get("/", authMiddleware, getAllOrders);
 
 /**
  * @swagger
@@ -76,6 +81,8 @@ router.get("/", getAllOrders);
  *   get:
  *     summary: Get an order by ID
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -89,7 +96,7 @@ router.get("/", getAllOrders);
  *       404:
  *         description: Order not found
  */
-router.get("/:id", getOrderById);
+router.get("/:id", authMiddleware, getOrderById);
 
 /**
  * @swagger
@@ -97,6 +104,8 @@ router.get("/:id", getOrderById);
  *   put:
  *     summary: Update an order
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -140,7 +149,7 @@ router.get("/:id", getOrderById);
  *       404:
  *         description: Order not found
  */
-router.put("/:id", updateOrder);
+router.put("/:id", authMiddleware, updateOrder);
 
 /**
  * @swagger
@@ -148,6 +157,8 @@ router.put("/:id", updateOrder);
  *   delete:
  *     summary: Delete an order
  *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -161,6 +172,6 @@ router.put("/:id", updateOrder);
  *       404:
  *         description: Order not found
  */
-router.delete("/:id", deleteOrder);
+router.delete("/:id", authMiddleware, deleteOrder);
 
 export default router;

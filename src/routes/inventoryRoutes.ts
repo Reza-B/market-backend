@@ -1,4 +1,3 @@
-// src/routes/inventoryRoutes.ts
 import { Router } from "express";
 import {
 	createInventory,
@@ -7,6 +6,7 @@ import {
 	updateInventory,
 	deleteInventory,
 } from "../controllers/inventoryController";
+import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
 
 const router = Router();
 
@@ -23,6 +23,8 @@ const router = Router();
  *   post:
  *     summary: Create a new inventory
  *     tags: [Inventories]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -40,7 +42,7 @@ const router = Router();
  *       400:
  *         description: Bad request
  */
-router.post("/", createInventory);
+router.post("/", authMiddleware, createInventory);
 
 /**
  * @swagger
@@ -48,11 +50,13 @@ router.post("/", createInventory);
  *   get:
  *     summary: Get all inventories
  *     tags: [Inventories]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of inventories
  */
-router.get("/", getAllInventories);
+router.get("/", authMiddleware, getAllInventories);
 
 /**
  * @swagger
@@ -60,6 +64,8 @@ router.get("/", getAllInventories);
  *   get:
  *     summary: Get an inventory by ID
  *     tags: [Inventories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -73,7 +79,7 @@ router.get("/", getAllInventories);
  *       404:
  *         description: Inventory not found
  */
-router.get("/:id", getInventoryById);
+router.get("/:id", authMiddleware, getInventoryById);
 
 /**
  * @swagger
@@ -81,6 +87,8 @@ router.get("/:id", getInventoryById);
  *   put:
  *     summary: Update an inventory
  *     tags: [Inventories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -107,7 +115,7 @@ router.get("/:id", getInventoryById);
  *       404:
  *         description: Inventory not found
  */
-router.put("/:id", updateInventory);
+router.put("/:id", authMiddleware, updateInventory);
 
 /**
  * @swagger
@@ -115,6 +123,8 @@ router.put("/:id", updateInventory);
  *   delete:
  *     summary: Delete an inventory
  *     tags: [Inventories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -128,6 +138,6 @@ router.put("/:id", updateInventory);
  *       404:
  *         description: Inventory not found
  */
-router.delete("/:id", deleteInventory);
+router.delete("/:id", authMiddleware, deleteInventory);
 
 export default router;

@@ -6,6 +6,7 @@ import {
 	getAllShippings,
 	deleteShipping,
 } from "../controllers/shippingController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
@@ -22,6 +23,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new shipping
  *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -53,7 +56,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post("/", createShipping);
+router.post("/", authMiddleware, createShipping);
 
 /**
  * @swagger
@@ -61,6 +64,8 @@ router.post("/", createShipping);
  *   put:
  *     summary: Update a shipping by ID
  *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -101,7 +106,7 @@ router.post("/", createShipping);
  *       500:
  *         description: Server error
  */
-router.put("/:id", updateShipping);
+router.put("/:id", authMiddleware, updateShipping);
 
 /**
  * @swagger
@@ -109,6 +114,8 @@ router.put("/:id", updateShipping);
  *   get:
  *     summary: Get a shipping by ID
  *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -124,7 +131,7 @@ router.put("/:id", updateShipping);
  *       500:
  *         description: Server error
  */
-router.get("/:id", getShippingById);
+router.get("/:id", authMiddleware, getShippingById);
 
 /**
  * @swagger
@@ -132,13 +139,15 @@ router.get("/:id", getShippingById);
  *   get:
  *     summary: Get all shippings
  *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of all shippings
  *       500:
  *         description: Server error
  */
-router.get("/", getAllShippings);
+router.get("/", authMiddleware, getAllShippings);
 
 /**
  * @swagger
@@ -146,6 +155,8 @@ router.get("/", getAllShippings);
  *   delete:
  *     summary: Delete a shipping by ID
  *     tags: [Shipping]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -161,6 +172,6 @@ router.get("/", getAllShippings);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", deleteShipping);
+router.delete("/:id", authMiddleware, deleteShipping);
 
 export default router;

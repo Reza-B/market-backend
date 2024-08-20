@@ -1,4 +1,3 @@
-// src/routes/categoryRoutes.ts
 import { Router } from "express";
 import {
 	createCategory,
@@ -9,6 +8,7 @@ import {
 	deleteCategory,
 	upload,
 } from "../controllers/categoryController";
+import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
 
 const router = Router();
 
@@ -79,6 +79,8 @@ router.get("/slug/:slug", getCategoryBySlug);
  *   post:
  *     summary: Create a new category
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -103,7 +105,7 @@ router.get("/slug/:slug", getCategoryBySlug);
  *       400:
  *         description: Bad request
  */
-router.post("/", upload.single("image"), createCategory);
+router.post("/", authMiddleware, upload.single("image"), createCategory);
 
 /**
  * @swagger
@@ -111,6 +113,8 @@ router.post("/", upload.single("image"), createCategory);
  *   put:
  *     summary: Update a category
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -144,7 +148,7 @@ router.post("/", upload.single("image"), createCategory);
  *       404:
  *         description: Category not found
  */
-router.put("/:id", upload.single("image"), updateCategory);
+router.put("/:id", authMiddleware, upload.single("image"), updateCategory);
 
 /**
  * @swagger
@@ -152,6 +156,8 @@ router.put("/:id", upload.single("image"), updateCategory);
  *   delete:
  *     summary: Delete a category
  *     tags: [Categories]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -165,6 +171,6 @@ router.put("/:id", upload.single("image"), updateCategory);
  *       404:
  *         description: Category not found
  */
-router.delete("/:id", deleteCategory);
+router.delete("/:id", authMiddleware, deleteCategory);
 
 export default router;

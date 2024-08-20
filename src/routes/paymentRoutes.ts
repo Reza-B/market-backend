@@ -6,6 +6,7 @@ import {
 	updatePayment,
 	deletePayment,
 } from "../controllers/paymentController";
+import { authMiddleware } from "../middlewares/authMiddleware"; // اضافه کردن میدلور احراز هویت
 
 const router = Router();
 
@@ -22,6 +23,8 @@ const router = Router();
  *   post:
  *     summary: Create a new payment
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -46,7 +49,7 @@ const router = Router();
  *       400:
  *         description: Bad request
  */
-router.post("/", createPayment);
+router.post("/", authMiddleware, createPayment);
 
 /**
  * @swagger
@@ -54,11 +57,13 @@ router.post("/", createPayment);
  *   get:
  *     summary: Get all payments
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of payments
  */
-router.get("/", getAllPayments);
+router.get("/", authMiddleware, getAllPayments);
 
 /**
  * @swagger
@@ -66,6 +71,8 @@ router.get("/", getAllPayments);
  *   get:
  *     summary: Get a payment by ID
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -79,7 +86,7 @@ router.get("/", getAllPayments);
  *       404:
  *         description: Payment not found
  */
-router.get("/:id", getPaymentById);
+router.get("/:id", authMiddleware, getPaymentById);
 
 /**
  * @swagger
@@ -87,6 +94,8 @@ router.get("/:id", getPaymentById);
  *   put:
  *     summary: Update a payment
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -120,7 +129,7 @@ router.get("/:id", getPaymentById);
  *       404:
  *         description: Payment not found
  */
-router.put("/:id", updatePayment);
+router.put("/:id", authMiddleware, updatePayment);
 
 /**
  * @swagger
@@ -128,6 +137,8 @@ router.put("/:id", updatePayment);
  *   delete:
  *     summary: Delete a payment
  *     tags: [Payments]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -141,6 +152,6 @@ router.put("/:id", updatePayment);
  *       404:
  *         description: Payment not found
  */
-router.delete("/:id", deletePayment);
+router.delete("/:id", authMiddleware, deletePayment);
 
 export default router;

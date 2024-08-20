@@ -39,7 +39,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/shipping", shippingRoutes);
 app.use("/api/reviews", reviewRoutes);
-app.use("/api/slider", sliderRoutes);
+app.use("/api/sliders", sliderRoutes);
 
 app.use(errorMiddleware);
 

@@ -7,6 +7,7 @@ import {
 	deleteReview,
 	getReviewsByProductId,
 } from "../controllers/reviewController";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 const router = express.Router();
 
@@ -23,6 +24,8 @@ const router = express.Router();
  *   post:
  *     summary: Create a new review
  *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -55,7 +58,7 @@ const router = express.Router();
  *       500:
  *         description: Server error
  */
-router.post("/", createReview);
+router.post("/", authMiddleware, createReview);
 
 /**
  * @swagger
@@ -63,6 +66,8 @@ router.post("/", createReview);
  *   put:
  *     summary: Update a review by ID
  *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -104,7 +109,7 @@ router.post("/", createReview);
  *       500:
  *         description: Server error
  */
-router.put("/:id", updateReview);
+router.put("/:id", authMiddleware, updateReview);
 
 /**
  * @swagger
@@ -172,6 +177,8 @@ router.get("/product/:productId", getReviewsByProductId);
  *   delete:
  *     summary: Delete a review by ID
  *     tags: [Review]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -187,6 +194,6 @@ router.get("/product/:productId", getReviewsByProductId);
  *       500:
  *         description: Server error
  */
-router.delete("/:id", deleteReview);
+router.delete("/:id", authMiddleware, deleteReview);
 
 export default router;

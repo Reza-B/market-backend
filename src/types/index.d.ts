@@ -14,6 +14,20 @@ export interface IUser extends Document {
 	comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
+export interface IAdmin extends Document {
+	phone: string;
+	email?: string;
+	password?: string;
+	firstName?: string;
+	lastName?: string;
+	profilePicture?: string;
+	gender?: string;
+	verificationCode?: string;
+	isPhoneVerified: boolean;
+	role: string;
+	comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
 export interface IProduct extends Document {
 	name: string;
 	mainImage: string;
@@ -126,6 +140,7 @@ declare global {
 	namespace Express {
 		interface Request {
 			user?: IUser;
+			admin?: IAdmin;
 		}
 	}
 }
