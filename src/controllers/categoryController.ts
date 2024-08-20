@@ -4,30 +4,9 @@ import {
 	createCategorySchema,
 	updateCategorySchema,
 } from "../validators/categoryValidator";
+import { uploadImage } from "../services/uploadImage";
 
-import multer from "multer";
-import path from "path";
-
-// تنظیم مکان و نام فایل‌های آپلود شده
-const storage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, "uploads/");
-	},
-	filename: (req, file, cb) => {
-		cb(null, Date.now() + path.extname(file.originalname));
-	},
-});
-
-// فیلتر کردن فایل‌ها بر اساس نوع (فقط تصاویر)
-const fileFilter = (req: any, file: any, cb: any) => {
-	if (file.mimetype.startsWith("image/")) {
-		cb(null, true);
-	} else {
-		cb(new Error("Only images are allowed!"), false);
-	}
-};
-
-export const upload = multer({ storage, fileFilter });
+export const upload = uploadImage({ dest: "categories" });
 
 export const createCategory = async (
 	req: Request,

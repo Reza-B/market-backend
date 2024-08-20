@@ -3,6 +3,12 @@ import { Request, Response, NextFunction } from "express";
 import Product from "../models/productModel";
 import { productSchema } from "../validators/productValidator";
 
+import { uploadImage } from "../services/uploadImage";
+
+const upload = uploadImage({ dest: "products" });
+const uploadMainImage = upload.single("mainImage");
+const uploadImages = upload.array("images", 5);
+
 // دریافت یک محصول بر اساس شناسه
 export const getProductById = async (
 	req: Request,
@@ -131,84 +137,112 @@ export const getAllProducts = async (
 };
 
 // ساخت محصول جدید
-export const createProduct = async (
-	req: Request,
-	res: Response,
-	next: NextFunction,
-) => {
-	try {
-		// اعتبارسنجی داده‌های ورودی
-		const { error } = productSchema.validate(req.body);
-		if (error) {
-			return res
-				.status(400)
-				.json({ status: "error", message: error.details[0].message });
+export const createProduct = [
+	uploadMainImage, // برای آپلود تصویر اصلی
+	uploadImages, // برای آپلود تصاویر اضافی
+	async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			// اعتبارسنجی داده‌های ورودی
+			const { error } = productSchema.validate(req.body);
+			if (error) {
+				return res
+					.status(400)
+					.json({ status: "error", message: error.details[0].message });
+			}
+
+			const productData = req.body;
+
+			// ذخیره مسیر عکس اصلی در محصول
+			if (req.file) {
+				productData.mainImage = req.file.filename;
+			}
+
+			// ذخیره مسیر تصاویر اضافی در محصول
+			if (req.files) {
+				productData.images = (req.files as Express.Multer.File[]).map(
+					(file) => file.filename,
+				);
+			}
+
+			const product = new Product(productData);
+
+			// محاسبه قیمت تخفیف‌خورده
+			if (product.isOnSale) {
+				product.discountedPrice =
+					product.basePrice -
+					(product.basePrice * product.discountPercentage) / 100;
+			} else {
+				product.discountedPrice = product.basePrice;
+			}
+
+			await product.save();
+			res.status(201).json({ status: "success", data: product });
+		} catch (error) {
+			next(error);
 		}
-
-		const product = new Product(req.body);
-
-		// محاسبه قیمت تخفیف‌خورده
-		if (product.isOnSale) {
-			product.discountedPrice =
-				product.basePrice -
-				(product.basePrice * product.discountPercentage) / 100;
-		} else {
-			product.discountedPrice = product.basePrice;
-		}
-
-		await product.save();
-		res.status(201).json({ status: "success", data: product });
-	} catch (error) {
-		next(error);
-	}
-};
+	},
+];
 
 // ویرایش محصول
-export const updateProduct = async (
-	req: Request,
-	res: Response,
-	next: NextFunction,
-) => {
-	try {
-		const { id } = req.params;
-		const updates = req.body;
+export const updateProduct = [
+	uploadMainImage,
+	uploadImages,
+	async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { id } = req.params;
+			const updates = req.body;
 
-		// اعتبارسنجی داده‌های ورودی
-		const { error } = productSchema.validate(updates);
-		if (error) {
-			return res
-				.status(400)
-				.json({ status: "error", message: error.details[0].message });
-		}
-
-		// محاسبه قیمت تخفیف‌خورده بر اساس داده‌های ورودی
-		if (
-			updates.basePrice !== undefined ||
-			updates.discountPercentage !== undefined ||
-			updates.isOnSale !== undefined
-		) {
-			if (updates.isOnSale) {
-				updates.discountedPrice =
-					updates.basePrice -
-					(updates.basePrice * updates.discountPercentage) / 100;
-			} else {
-				updates.discountedPrice = updates.basePrice;
+			// اعتبارسنجی داده‌های ورودی
+			const { error } = productSchema.validate(updates);
+			if (error) {
+				return res
+					.status(400)
+					.json({ status: "error", message: error.details[0].message });
 			}
+
+			// به‌روزرسانی مسیر عکس اصلی در صورت آپلود شدن
+			if (req.file) {
+				updates.mainImage = req.file.filename;
+			}
+
+			// به‌روزرسانی مسیر تصاویر اضافی در صورت آپلود شدن
+			if (req.files) {
+				updates.images = (req.files as Express.Multer.File[]).map(
+					(file) => file.filename,
+				);
+			}
+
+			// محاسبه قیمت تخفیف‌خورده بر اساس داده‌های ورودی
+			if (
+				updates.basePrice !== undefined ||
+				updates.discountPercentage !== undefined ||
+				updates.isOnSale !== undefined
+			) {
+				if (updates.isOnSale) {
+					updates.discountedPrice =
+						updates.basePrice -
+						(updates.basePrice * updates.discountPercentage) / 100;
+				} else {
+					updates.discountedPrice = updates.basePrice;
+				}
+			}
+
+			const product = await Product.findByIdAndUpdate(id, updates, {
+				new: true,
+			});
+
+			if (!product) {
+				return res
+					.status(404)
+					.json({ status: "error", message: "Product not found" });
+			}
+
+			res.status(200).json({ status: "success", data: product });
+		} catch (error) {
+			next(error);
 		}
-
-		const product = await Product.findByIdAndUpdate(id, updates, { new: true });
-
-		if (!product) {
-			return res
-				.status(404)
-				.json({ status: "error", message: "Product not found" });
-		}
-
-		res.status(200).json({ status: "success", data: product });
-	} catch (error) {
-		next(error);
-	}
-};
+	},
+];
 
 // حذف محصول
 export const deleteProduct = async (

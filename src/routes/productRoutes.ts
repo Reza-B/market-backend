@@ -30,12 +30,22 @@ const router = express.Router();
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
+ *         description: The ID of the product
  *         schema:
  *           type: string
  *     responses:
  *       200:
  *         description: Product details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
  *       404:
  *         description: Product not found
  *       500:
@@ -52,6 +62,18 @@ router.get("/:id", getProductById);
  *     responses:
  *       200:
  *         description: List of 12 latest products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
  *       500:
  *         description: Server error
  */
@@ -66,6 +88,18 @@ router.get("/latest", getLatestProducts);
  *     responses:
  *       200:
  *         description: List of 12 products with the highest discounts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
  *       500:
  *         description: Server error
  */
@@ -80,6 +114,18 @@ router.get("/top-discounted", getTopDiscountedProducts);
  *     responses:
  *       200:
  *         description: List of 12 random discounted products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
  *       500:
  *         description: Server error
  */
@@ -94,6 +140,18 @@ router.get("/random-discounted", getRandomDiscountedProducts);
  *     responses:
  *       200:
  *         description: Summary of all products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ProductSummary'
  *       500:
  *         description: Server error
  */
@@ -108,6 +166,18 @@ router.get("/summary", getAllProductSummary);
  *     responses:
  *       200:
  *         description: List of all products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Product'
  *       500:
  *         description: Server error
  */
@@ -122,65 +192,43 @@ router.get("/", getAllProducts);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
- *                 description: Product name
+ *               basePrice:
+ *                 type: number
+ *               discountPercentage:
+ *                 type: number
+ *               isOnSale:
+ *                 type: boolean
+ *               slug:
+ *                 type: string
  *               mainImage:
  *                 type: string
- *                 description: URL of the main image
+ *                 format: binary
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
- *                   description: URLs of additional images
- *               rating:
- *                 type: number
- *                 format: float
- *                 description: Product rating (0 to 5)
- *               ratingCount:
- *                 type: number
- *                 format: int32
- *                 description: Number of ratings
- *               keyFeatures:
- *                 type: array
- *                 items:
- *                   type: string
- *                   description: Key features of the product
- *               sizes:
- *                 type: array
- *                 items:
- *                   type: string
- *                   description: Available sizes
- *               description:
- *                 type: string
- *                 description: Product description
- *               basePrice:
- *                 type: number
- *                 format: float
- *                 description: Base price of the product
- *               discountedPrice:
- *                 type: number
- *                 format: float
- *                 description: Discounted price of the product
- *               isOnSale:
- *                 type: boolean
- *                 description: Whether the product is on sale
- *               discountPercentage:
- *                 type: number
- *                 format: float
- *                 description: Discount percentage
- *               category:
- *                 type: string
- *                 description: Product category ID
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Product created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
  *       400:
- *         description: Invalid input data
+ *         description: Bad request
  *       500:
  *         description: Server error
  */
@@ -196,7 +244,7 @@ router.post("/", createProduct);
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
+ *         description: The ID of the product
  *         schema:
  *           type: string
  *     requestBody:
@@ -259,6 +307,16 @@ router.post("/", createProduct);
  *     responses:
  *       200:
  *         description: Product updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
  *       400:
  *         description: Invalid input data
  *       404:
@@ -278,7 +336,7 @@ router.put("/:id", updateProduct);
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
+ *         description: The ID of the product
  *         schema:
  *           type: string
  *     responses:
