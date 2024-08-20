@@ -9,6 +9,7 @@ import {
 	deleteUser,
 	updateUser,
 	loginWithCode,
+	upload,
 } from "../controllers/userController";
 
 const router = express.Router();
@@ -251,7 +252,7 @@ router.delete("/:id", deleteUser);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -269,20 +270,89 @@ router.delete("/:id", deleteUser);
  *                 description: User's last name
  *               profilePicture:
  *                 type: string
- *                 description: URL of the user's profile picture
+ *                 format: binary
+ *                 description: User's profile picture (file upload)
  *               gender:
  *                 type: string
  *                 description: User's gender
  *     responses:
  *       200:
  *         description: User information updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: User updated successfully
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID
+ *                     phone:
+ *                       type: string
+ *                       description: User's phone number
+ *                     firstName:
+ *                       type: string
+ *                       description: User's first name
+ *                     lastName:
+ *                       type: string
+ *                       description: User's last name
+ *                     email:
+ *                       type: string
+ *                       description: User's email address
+ *                     profilePicture:
+ *                       type: string
+ *                       description: URL of the user's profile picture
+ *                     gender:
+ *                       type: string
+ *                       description: User's gender
  *       400:
  *         description: Bad request or invalid data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Bad request or invalid data
  *       404:
  *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: Server error
  */
-router.put("/:id", updateUser);
+router.put("/:id", upload.single("profilePicture"), updateUser);
 
 export default router;

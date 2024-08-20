@@ -11,6 +11,9 @@ import {
 import bcrypt from "bcryptjs";
 import { sendVerificationCode } from "../services/notificationService";
 import { generateToken, verifyToken } from "../services/authService";
+import { uploadImage } from "../services/uploadImage";
+
+export const upload = uploadImage({ dest: "profile_pictures" });
 
 // ورود کاربر با شماره تلفن
 export const handlePhoneInput = async (
@@ -337,19 +340,24 @@ export const updateUser = async (
 		const { id } = req.params;
 		const updates = req.body;
 
-		// اعتبارسنجی ورودی
+		// Validate input
 		const { error } = updateUserSchema.validate(updates);
 		if (error)
 			return res
 				.status(400)
 				.json({ status: "error", message: error.details[0].message });
 
-		// بررسی وجود کاربر
+		// Check if user exists
 		const user = await User.findById(id);
 		if (!user)
 			return res
 				.status(404)
 				.json({ status: "error", message: "User not found" });
+
+		// Handle profile picture
+		if (req.file) {
+			user.profilePicture = req.file.path;
+		}
 
 		if (updates.password) {
 			user.password = updates.password;
@@ -366,7 +374,7 @@ export const updateUser = async (
 				id: user._id,
 				phone: user.phone,
 				firstName: user.firstName,
-				lastname: user.lastName,
+				lastName: user.lastName,
 				email: user.email,
 				profilePicture: user.profilePicture,
 				gender: user.gender,
