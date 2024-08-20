@@ -1,9 +1,9 @@
 import express from "express";
 import {
 	createShipping,
-	getShippings,
-	getShippingById,
 	updateShipping,
+	getShippingById,
+	getAllShippings,
 	deleteShipping,
 } from "../controllers/shippingController";
 
@@ -20,7 +20,7 @@ const router = express.Router();
  * @swagger
  * /shippings:
  *   post:
- *     summary: Create a new shipping entry
+ *     summary: Create a new shipping
  *     tags: [Shipping]
  *     requestBody:
  *       required: true
@@ -29,72 +29,43 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               order:
+ *               user:
  *                 type: string
+ *                 description: User ID
  *               address:
  *                 type: string
+ *                 description: Shipping address
+ *               city:
+ *                 type: string
+ *                 description: City
+ *               postalCode:
+ *                 type: string
+ *                 description: Postal code
  *               shippingMethod:
  *                 type: string
- *               trackingNumber:
- *                 type: string
- *               status:
- *                 type: string
+ *                 description: Shipping method
+ *                 enum: [standard, express, overnight]
  *     responses:
  *       201:
- *         description: Shipping entry created successfully
+ *         description: Shipping created successfully
+ *       400:
+ *         description: Invalid input data
  *       500:
  *         description: Server error
  */
-router.post("/shippings", createShipping);
-
-/**
- * @swagger
- * /shippings:
- *   get:
- *     summary: Get all shipping entries
- *     tags: [Shipping]
- *     responses:
- *       200:
- *         description: List of all shipping entries
- *       500:
- *         description: Server error
- */
-router.get("/shippings", getShippings);
-
-/**
- * @swagger
- * /shippings/{id}:
- *   get:
- *     summary: Get a shipping entry by ID
- *     tags: [Shipping]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: Shipping entry ID
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Shipping entry details
- *       404:
- *         description: Shipping entry not found
- *       500:
- *         description: Server error
- */
-router.get("/shippings/:id", getShippingById);
+router.post("/", createShipping);
 
 /**
  * @swagger
  * /shippings/{id}:
  *   put:
- *     summary: Update a shipping entry by ID
+ *     summary: Update a shipping by ID
  *     tags: [Shipping]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: Shipping entry ID
+ *         description: Shipping ID
  *         schema:
  *           type: string
  *     requestBody:
@@ -104,45 +75,92 @@ router.get("/shippings/:id", getShippingById);
  *           schema:
  *             type: object
  *             properties:
+ *               user:
+ *                 type: string
+ *                 description: User ID
  *               address:
  *                 type: string
+ *                 description: Shipping address
+ *               city:
+ *                 type: string
+ *                 description: City
+ *               postalCode:
+ *                 type: string
+ *                 description: Postal code
  *               shippingMethod:
  *                 type: string
- *               trackingNumber:
- *                 type: string
- *               status:
- *                 type: string
+ *                 description: Shipping method
+ *                 enum: [standard, express, overnight]
  *     responses:
  *       200:
- *         description: Shipping entry updated successfully
+ *         description: Shipping updated successfully
+ *       400:
+ *         description: Invalid input data
  *       404:
- *         description: Shipping entry not found
+ *         description: Shipping not found
  *       500:
  *         description: Server error
  */
-router.put("/shippings/:id", updateShipping);
+router.put("/:id", updateShipping);
 
 /**
  * @swagger
  * /shippings/{id}:
- *   delete:
- *     summary: Delete a shipping entry by ID
+ *   get:
+ *     summary: Get a shipping by ID
  *     tags: [Shipping]
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
- *         description: Shipping entry ID
+ *         description: Shipping ID
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Shipping entry deleted successfully
+ *         description: Shipping details retrieved successfully
  *       404:
- *         description: Shipping entry not found
+ *         description: Shipping not found
  *       500:
  *         description: Server error
  */
-router.delete("/shippings/:id", deleteShipping);
+router.get("/:id", getShippingById);
+
+/**
+ * @swagger
+ * /shippings:
+ *   get:
+ *     summary: Get all shippings
+ *     tags: [Shipping]
+ *     responses:
+ *       200:
+ *         description: List of all shippings
+ *       500:
+ *         description: Server error
+ */
+router.get("/", getAllShippings);
+
+/**
+ * @swagger
+ * /shippings/{id}:
+ *   delete:
+ *     summary: Delete a shipping by ID
+ *     tags: [Shipping]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: Shipping ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Shipping deleted successfully
+ *       404:
+ *         description: Shipping not found
+ *       500:
+ *         description: Server error
+ */
+router.delete("/:id", deleteShipping);
 
 export default router;
